@@ -7,11 +7,16 @@ import { Button } from '@/components/ui/button'
 import { db } from '@/lib/firebase'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { phoneAuthService } from '@/lib/firebase'
-import { Loader2, ArrowLeft, Shield, Mail, Lock, Eye, EyeOff, LogIn, UserPlus, Sparkles } from 'lucide-react'
+import { Loader2, ArrowLeft, Shield, Mail, Lock, Eye, EyeOff, LogIn, UserPlus, Sparkles, Phone } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 
 function LoginContent() {
+  const [authMode, setAuthMode] = useState<'phone' | 'email'>('phone')
+  const [phoneNumber, setPhoneNumber] = useState('')
+  const [otp, setOtp] = useState('')
+  const [otpSent, setOtpSent] = useState(false)
+  const [confirmationResult, setConfirmationResult] = useState<any>(null)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -19,6 +24,47 @@ function LoginContent() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
+
+  const handleSendOTP = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!phoneNumber || phoneNumber.length !== 10) {
+      setError('Please enter a valid 10-digit phone number')
+      return
+    }
+    setLoading(true)
+    setError('')
+    try {
+      const fullPhone = `+91${phoneNumber}`
+      const confirmation = await phoneAuthService.sendOTP(fullPhone, 'recaptcha-container')
+      setConfirmationResult(confirmation)
+      setOtpSent(true)
+    } catch (err: any) {
+      console.error('Send OTP Error:', err)
+      setError(err.message || 'Failed to send OTP')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleVerifyOTP = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!otp || otp.length < 6) {
+      setError('Please enter a valid 6-digit OTP')
+      return
+    }
+    setLoading(true)
+    setError('')
+    try {
+      const user = await phoneAuthService.verifyOTP(otp, confirmationResult)
+      await syncUserProfile(user)
+      router.push('/')
+    } catch (err: any) {
+      console.error('Verify OTP Error:', err)
+      setError('Invalid OTP code. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -148,72 +194,129 @@ function LoginContent() {
               <div className="relative mb-6">
                 <div className="absolute inset-0 flex items-center"><div className="w-full border-t-2 border-gray-100"></div></div>
                 <div className="relative flex justify-center text-sm font-bold text-gray-400">
-                  <span className="px-4 bg-white">OR Email</span>
+                  <span className="px-4 bg-white">OR</span>
                 </div>
               </div>
 
-              {/* Email Form */}
-              <form onSubmit={handleEmailAuth} className="space-y-4 text-left">
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1.5 ml-1">Email Address</label>
-                  <div className="relative">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
-                    <input
-                      type="email"
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="name@example.com"
-                      className="w-full pl-12 pr-4 py-3 border-2 border-gray-100 rounded-2xl focus:outline-none focus:border-brand-pink focus:ring-4 focus:ring-brand-pink/10 bg-gray-50 text-gray-900 font-medium transition-all"
-                    />
-                  </div>
-                </div>
+              {/* Dynamic Auth Form */}
+              <AnimatePresence mode="wait">
+                {authMode === 'phone' ? (
+                  <motion.div key="phone-auth" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="text-left">
+                    {!otpSent ? (
+                      <form onSubmit={handleSendOTP} className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-bold text-gray-700 mb-1.5 ml-1">Phone Number</label>
+                          <div className="relative flex">
+                            <span className="inline-flex items-center px-4 rounded-l-2xl border-2 border-r-0 border-gray-100 bg-gray-50 text-gray-500 font-bold border-r-0">
+                              +91
+                            </span>
+                            <input
+                              type="tel"
+                              required
+                              value={phoneNumber}
+                              onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                              placeholder="9876543210"
+                              className="w-full px-4 py-3 border-2 border-gray-100 rounded-r-2xl focus:outline-none focus:border-brand-pink focus:ring-4 focus:ring-brand-pink/10 bg-gray-50 text-gray-900 font-medium transition-all"
+                              maxLength={10}
+                            />
+                          </div>
+                        </div>
+                        
+                        <div id="recaptcha-container" className="flex justify-center mt-4"></div>
 
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1.5 ml-1">Password</label>
-                  <div className="relative">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className="w-full pl-12 pr-12 py-3 border-2 border-gray-100 rounded-2xl focus:outline-none focus:border-brand-pink focus:ring-4 focus:ring-brand-pink/10 bg-gray-50 text-gray-900 font-medium transition-all"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand-pink transition-colors"
-                    >
-                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                    </button>
-                  </div>
-                </div>
+                        <Button type="submit" disabled={loading} className="w-full btn-premium-gold py-6 rounded-full text-lg shadow-lg mt-6">
+                          {loading ? <Loader2 className="h-5 w-5 animate-spin mx-auto" /> : 'Send OTP'}
+                        </Button>
+                      </form>
+                    ) : (
+                      <form onSubmit={handleVerifyOTP} className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-bold text-gray-700 mb-1.5 ml-1">Enter OTP</label>
+                          <div className="relative">
+                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
+                            <input
+                              type="text"
+                              required
+                              value={otp}
+                              onChange={(e) => setOtp(e.target.value)}
+                              placeholder="123456"
+                              className="w-full pl-12 pr-4 py-3 border-2 border-gray-100 rounded-2xl focus:outline-none focus:border-brand-pink focus:ring-4 focus:ring-brand-pink/10 bg-gray-50 text-gray-900 font-medium transition-all text-center tracking-[0.5em] text-xl"
+                              maxLength={6}
+                            />
+                          </div>
+                        </div>
 
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full btn-premium-gold py-6 rounded-full text-lg shadow-lg mt-6"
-                >
-                  {loading ? (
-                    <Loader2 className="h-5 w-5 animate-spin mx-auto" />
-                  ) : (
-                    isSignUp ? 'Create Account' : 'Sign In'
-                  )}
-                </Button>
-              </form>
+                        <Button type="submit" disabled={loading} className="w-full btn-premium-gold py-6 rounded-full text-lg shadow-lg mt-6">
+                          {loading ? <Loader2 className="h-5 w-5 animate-spin mx-auto" /> : 'Verify & Login'}
+                        </Button>
+                        
+                        <button type="button" onClick={() => {setOtpSent(false); setOtp(''); setError('');}} className="w-full text-sm font-bold text-gray-500 hover:text-brand-pink mt-4 text-center block">
+                          Change Phone Number
+                        </button>
+                      </form>
+                    )}
+                  </motion.div>
+                ) : (
+                  <motion.div key="email-auth" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="text-left">
+                    <form onSubmit={handleEmailAuth} className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-1.5 ml-1">Email Address</label>
+                        <div className="relative">
+                          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
+                          <input
+                            type="email"
+                            required
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="name@example.com"
+                            className="w-full pl-12 pr-4 py-3 border-2 border-gray-100 rounded-2xl focus:outline-none focus:border-brand-pink focus:ring-4 focus:ring-brand-pink/10 bg-gray-50 text-gray-900 font-medium transition-all"
+                          />
+                        </div>
+                      </div>
 
-              <div className="text-center pt-8">
+                      <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-1.5 ml-1">Password</label>
+                        <div className="relative">
+                          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
+                          <input
+                            type={showPassword ? 'text' : 'password'}
+                            required
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="••••••••"
+                            className="w-full pl-12 pr-12 py-3 border-2 border-gray-100 rounded-2xl focus:outline-none focus:border-brand-pink focus:ring-4 focus:ring-brand-pink/10 bg-gray-50 text-gray-900 font-medium transition-all"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand-pink transition-colors"
+                          >
+                            {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                          </button>
+                        </div>
+                      </div>
+
+                      <Button type="submit" disabled={loading} className="w-full btn-premium-gold py-6 rounded-full text-lg shadow-lg mt-6">
+                        {loading ? <Loader2 className="h-5 w-5 animate-spin mx-auto" /> : (isSignUp ? 'Create Account' : 'Sign In')}
+                      </Button>
+                      
+                      <div className="text-center pt-4">
+                        <button type="button" onClick={() => { setIsSignUp(!isSignUp); setError(''); }} className="text-sm font-bold text-gray-500 hover:text-brand-purple transition-colors">
+                          {isSignUp ? <span>Already have an account? <span className="text-brand-pink">Sign In</span></span> : <span>Don't have an account? <span className="text-brand-pink">Sign Up</span></span>}
+                        </button>
+                      </div>
+                    </form>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <div className="text-center pt-6 mt-6 border-t-2 border-gray-50">
                 <button
-                  onClick={() => { setIsSignUp(!isSignUp); setError(''); }}
-                  className="text-sm font-bold text-gray-500 hover:text-brand-purple transition-colors"
+                  type="button"
+                  onClick={() => { setAuthMode(authMode === 'phone' ? 'email' : 'phone'); setError(''); }}
+                  className="text-sm font-bold text-brand-purple hover:text-brand-pink transition-colors"
                 >
-                  {isSignUp ? (
-                    <span>Already have an account? <span className="text-brand-pink">Sign In</span></span>
-                  ) : (
-                    <span>Don't have an account? <span className="text-brand-pink">Sign Up</span></span>
-                  )}
+                  {authMode === 'phone' ? 'Use Email Instead' : 'Use Phone Number Instead'}
                 </button>
               </div>
 

@@ -30,6 +30,7 @@
   --brand-blue: #3b82f6;
 }
 
+/* stylelint-disable-line at-rule-no-unknown -- @theme is a valid Tailwind CSS v4 at-rule */
 @theme {
   --color-background: #fffbfb;
   --color-foreground: #1e1b4b;

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { auth, db } from '@/lib/firebase'
 import { doc, getDoc, updateDoc } from 'firebase/firestore'
 import { Button } from '@/components/ui/button'
-import { User, Mail, Phone, Save, Sparkles, LogOut, Package, Shield, Settings } from 'lucide-react'
+import { User, Mail, Phone, Save, Sparkles, LogOut, Package, Shield, Settings, MapPin, Building, Map } from 'lucide-react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -36,6 +36,10 @@ export default function ProfilePage() {
     last_name: '',
     phone: '',
     email: '',
+    address: '',
+    city: '',
+    state: '',
+    zip: ''
   })
   const [modalState, setModalState] = useState<{isOpen: boolean, title: string, message: string, type: 'error'|'success'|'info'}>({
     isOpen: false, title: '', message: '', type: 'info'
@@ -59,6 +63,10 @@ export default function ProfilePage() {
               last_name: data.last_name || '',
               phone: data.phone || '',
               email: user.email || '',
+              address: data.address || '',
+              city: data.city || '',
+              state: data.state || '',
+              zip: data.zip || '',
             })
           } else {
             setProfile(prev => ({ ...prev, email: user.email || '' }))
@@ -84,6 +92,10 @@ export default function ProfilePage() {
           first_name: profile.first_name,
           last_name: profile.last_name,
           phone: profile.phone,
+          address: profile.address,
+          city: profile.city,
+          state: profile.state,
+          zip: profile.zip,
           updated_at: new Date().toISOString(),
         })
         setModalState({
@@ -188,6 +200,23 @@ export default function ProfilePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 mt-2">
                 <InputField label="Email Address" icon={Mail} type="email" field="email" disabled={true} value={profile.email} onChange={() => {}} />
                 <InputField label="Phone Number" icon={Phone} type="tel" field="phone" value={profile.phone} onChange={(field: string, val: string) => setProfile({...profile, [field]: val})} />
+              </div>
+
+              <div className="flex items-center justify-between mt-8 mb-6">
+                <h2 className="text-heading-3 text-foreground flex items-center">
+                  Shipping Details <MapPin className="w-5 h-5 ml-2 text-brand-pink" />
+                </h2>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
+                <div className="md:col-span-2">
+                  <InputField label="Street Address" icon={MapPin} field="address" value={profile.address} onChange={(field: string, val: string) => setProfile({...profile, [field]: val})} />
+                </div>
+                <InputField label="City" icon={Building} field="city" value={profile.city} onChange={(field: string, val: string) => setProfile({...profile, [field]: val})} />
+                <div className="grid grid-cols-2 gap-4">
+                  <InputField label="State" icon={Map} field="state" value={profile.state} onChange={(field: string, val: string) => setProfile({...profile, [field]: val})} />
+                  <InputField label="ZIP Code" icon={Map} field="zip" value={profile.zip} onChange={(field: string, val: string) => setProfile({...profile, [field]: val})} />
+                </div>
               </div>
 
               <div className="mt-8 flex items-center justify-between pt-8 border-t-2 border-gray-100">
