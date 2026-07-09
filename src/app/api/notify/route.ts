@@ -5,8 +5,48 @@ import { Resend } from 'resend'
 // We provide a fallback just to prevent crashes if it's missing, though emails won't send.
 const resend = new Resend(process.env.RESEND_API_KEY || 're_missing_key')
 
+// Simple in-memory rate limiter (for production, use Redis or similar)
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>()
+const RATE_LIMIT_WINDOW = 60000 // 1 minute
+const RATE_LIMIT_MAX_REQUESTS = 10 // max 10 requests per minute per IP
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now()
+  const record = rateLimitMap.get(ip)
+  
+  if (!record || now > record.resetTime) {
+    rateLimitMap.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW })
+    return true
+  }
+  
+  if (record.count >= RATE_LIMIT_MAX_REQUESTS) {
+    return false
+  }
+  
+  record.count++
+  return true
+}
+
+function getClientIp(req: Request): string {
+  // Try to get IP from various headers
+  const forwarded = req.headers.get('x-forwarded-for')
+  const realIp = req.headers.get('x-real-ip')
+  const ip = forwarded?.split(',')[0] || realIp || 'unknown'
+  return ip
+}
+
 export async function POST(req: Request) {
   try {
+    const ip = getClientIp(req)
+    
+    // Rate limiting check
+    if (!checkRateLimit(ip)) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        { status: 429 }
+      )
+    }
+
     const body = await req.json()
     const { type, data } = body
 
@@ -85,8 +125,17 @@ export async function POST(req: Request) {
     })
 
     return NextResponse.json({ success: true, data: dataRes })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error sending notification email:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    
+    // Return generic error message to avoid leaking sensitive information
+    const isDevelopment = process.env.NODE_ENV === 'development'
+    return NextResponse.json(
+      { 
+        error: isDevelopment ? error.message : 'Failed to send notification',
+        code: isDevelopment ? error.code : undefined
+      },
+      { status: 500 }
+    )
   }
 }

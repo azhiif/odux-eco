@@ -9,6 +9,7 @@ import { Upload, X, Image as ImageIcon, Sparkles, User, Mail, Phone, PenTool, La
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import { Modal } from '@/components/ui/modal'
+import { sanitizeString, sanitizeEmail, sanitizePhone, sanitizeMessage } from '@/lib/sanitization'
 
 const InputField = ({ label, icon: Icon, type = 'text', field, placeholder, required = true, isTextarea = false, value, onChange }: any) => (
   <div className="mb-4">
@@ -100,8 +101,14 @@ export default function CustomOrderPage() {
       await uploadBytes(storageRef, selectedFile)
       const publicUrl = await getDownloadURL(storageRef)
 
+      // Sanitize all inputs before storing
       const orderData = {
-        ...formData,
+        name: sanitizeString(formData.name),
+        email: sanitizeEmail(formData.email),
+        phone: sanitizePhone(formData.phone),
+        requirements: sanitizeMessage(formData.requirements),
+        size: sanitizeString(formData.size),
+        budget: sanitizeString(formData.budget),
         image_url: publicUrl,
         status: 'pending',
         created_at: new Date().toISOString()

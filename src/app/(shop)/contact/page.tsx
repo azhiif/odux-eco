@@ -7,6 +7,7 @@ import { motion } from 'framer-motion'
 import { Modal } from '@/components/ui/modal'
 import { db } from '@/lib/firebase'
 import { collection, addDoc } from 'firebase/firestore'
+import { sanitizeString, sanitizeEmail, sanitizePhone, sanitizeMessage } from '@/lib/sanitization'
 
 const InputField = ({ label, type = 'text', field, placeholder, required = false, isTextarea = false, value, onChange }: any) => (
   <div className="mb-4">
@@ -58,8 +59,13 @@ export default function ContactPage() {
     setLoading(true)
     
     try {
+      // Sanitize all inputs before storing
       const messageData = {
-        ...formData,
+        name: sanitizeString(formData.name),
+        email: sanitizeEmail(formData.email),
+        phone: sanitizePhone(formData.phone),
+        subject: sanitizeString(formData.subject),
+        message: sanitizeMessage(formData.message),
         status: 'unread',
         created_at: new Date().toISOString()
       }

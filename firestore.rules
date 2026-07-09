@@ -22,6 +22,19 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
+    // Validation helpers
+    function isValidEmail(email) {
+      return email.matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$');
+    }
+
+    function isValidPhone(phone) {
+      return phone.matches('^[+]?[0-9]{10,15}$');
+    }
+
+    function isValidString(str) {
+      return str != null && str.size() > 0 && str.size() <= 500;
+    }
+
     // User profiles - can read own profile, admins can read all
     match /user_profiles/{userId} {
       allow read: if isOwner(userId) || isAdmin();
@@ -61,7 +74,10 @@ service cloud.firestore {
     // Contact Messages
     match /contact_messages/{messageId} {
       allow read: if isAdmin();
-      allow create: if true;
+      allow create: if isValidEmail(request.resource.data.email)
+                    && isValidString(request.resource.data.name)
+                    && isValidString(request.resource.data.message)
+                    && isValidString(request.resource.data.subject);
       allow update, delete: if isAdmin();
     }
 
@@ -74,7 +90,13 @@ service cloud.firestore {
     // Orders - owner read, admin read all
     match /orders/{orderId} {
       allow read: if isOwner(resource.data.user_id) || isAdmin();
-      allow create: if isAuthenticated() && request.resource.data.user_id == request.auth.uid;
+      allow create: if isAuthenticated() 
+                    && request.resource.data.user_id == request.auth.uid
+                    && isValidEmail(request.resource.data.shipping_address.email)
+                    && isValidPhone(request.resource.data.shipping_address.phone)
+                    && isValidString(request.resource.data.shipping_address.first_name)
+                    && isValidString(request.resource.data.shipping_address.last_name)
+                    && request.resource.data.total_amount > 0;
       allow update: if isAdmin();
       allow delete: if isSuperAdmin();
     }
