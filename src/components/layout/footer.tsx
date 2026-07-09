@@ -117,14 +117,14 @@ export default function Footer() {
                 <Phone className="h-5 w-5 text-[#C5A46D]" />
                 <div>
                   <p className="text-body font-medium">WhatsApp</p>
-                  <p className="text-body-small">+91 9072270271</p>
+                  <p className="text-body-small">{process.env.NEXT_PUBLIC_CONTACT_PHONE || '+91 9072270271'}</p>
                 </div>
               </div>
               <div className="flex items-center space-x-3 text-gray-600">
                 <Instagram className="h-5 w-5 text-[#C5A46D]" />
                 <div>
                   <p className="text-body font-medium">Instagram</p>
-                  <p className="text-body-small">@odux.art</p>
+                  <p className="text-body-small">{process.env.NEXT_PUBLIC_INSTAGRAM_HANDLE || '@odux.art'}</p>
                 </div>
               </div>
               <div className="flex items-center space-x-3 text-gray-600">

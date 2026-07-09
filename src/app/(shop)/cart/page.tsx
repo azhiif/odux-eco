@@ -83,47 +83,47 @@ export default function CartPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 bg-background">
+    <div className="container mx-auto px-4 py-6 md:py-8 bg-background">
       {/* Header */}
-      <div className="mb-8">
-        <Link href="/products" className="inline-flex items-center text-muted-foreground hover:text-foreground mb-4">
+      <div className="mb-6 md:mb-8">
+        <Link href="/products" className="inline-flex items-center text-muted-foreground hover:text-foreground mb-3 md:mb-4">
           <ArrowLeft className="h-4 w-4 mr-2" />
           Continue Shopping
         </Link>
-        <h1 className="text-3xl font-bold mb-2 text-foreground">Shopping Cart</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-2xl md:text-3xl font-bold mb-2 text-foreground">Shopping Cart</h1>
+        <p className="text-muted-foreground text-sm md:text-base">
           {totalItems} {totalItems === 1 ? 'item' : 'items'} in your cart
         </p>
       </div>
 
       {cartItems.length === 0 ? (
-        <div className="text-center py-16">
-          <div className="w-32 h-32 bg-muted rounded-full mx-auto mb-6 flex items-center justify-center">
-            <ShoppingCart className="h-12 w-12 text-muted-foreground" />
+        <div className="text-center py-12 md:py-16">
+          <div className="w-24 h-24 md:w-32 md:h-32 bg-muted rounded-full mx-auto mb-4 md:mb-6 flex items-center justify-center">
+            <ShoppingCart className="h-10 w-10 md:h-12 md:w-12 text-muted-foreground" />
           </div>
-          <h2 className="text-2xl font-semibold mb-4 text-foreground">Your cart is empty</h2>
-          <p className="text-muted-foreground mb-8">Looks like you haven't added anything to your cart yet.</p>
+          <h2 className="text-xl md:text-2xl font-semibold mb-3 md:mb-4 text-foreground">Your cart is empty</h2>
+          <p className="text-muted-foreground mb-6 md:mb-8 text-sm md:text-base">Looks like you haven't added anything to your cart yet.</p>
           <Link href="/products">
-            <Button className="bg-foreground text-background hover:bg-muted">
+            <Button className="bg-foreground text-background hover:bg-muted w-full md:w-auto">
               Start Shopping
             </Button>
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
           {/* Cart Items */}
-          <div className="lg:col-span-2 space-y-4">
+          <div className="lg:col-span-2 space-y-3 md:space-y-4">
             {cartItems.map((item) => (
-              <div key={item.id} className="bg-card p-4 rounded-lg shadow-sm border border-border">
-                <div className="flex gap-4">
+              <div key={item.id} className="bg-card p-3 md:p-4 rounded-lg shadow-sm border border-border">
+                <div className="flex gap-3 md:gap-4">
                   {/* Product Image */}
                   <Link href={`/products/${item.products.id}`}>
-                    <div className="relative w-24 h-24 bg-muted rounded-lg overflow-hidden flex-shrink-0">
+                    <div className="relative w-20 h-20 md:w-24 md:h-24 bg-muted rounded-lg overflow-hidden flex-shrink-0">
                       <Image
                         src={item.custom_image || item.products.image_urls[0]}
                         alt={item.products.name}
-                        width={96}
-                        height={96}
+                        width={80}
+                        height={80}
                         className="w-full h-full object-cover"
                       />
                       {item.custom_image && (
@@ -138,7 +138,7 @@ export default function CartPage() {
                   <div className="flex-1">
                     <div className="flex justify-between mb-2">
                       <Link href={`/products/${item.products.id}`}>
-                        <h3 className="font-semibold hover:text-black transition-colors">
+                        <h3 className="font-semibold hover:text-black transition-colors text-sm md:text-base line-clamp-1 md:line-clamp-2">
                           {item.products.name}
                         </h3>
                       </Link>
@@ -147,14 +147,14 @@ export default function CartPage() {
                         size="sm"
                         onClick={() => removeItem(item.id)}
                         disabled={updating === item.id}
-                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
 
-                    <div className="flex justify-between items-center">
-                      <p className="text-lg font-semibold">{formatPrice(item.products.price)}</p>
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 sm:gap-0">
+                      <p className="text-base md:text-lg font-semibold">{formatPrice(item.products.price)}</p>
                       
                       {/* Quantity Controls */}
                       <div className="flex items-center gap-2">
@@ -163,19 +163,19 @@ export default function CartPage() {
                           size="sm"
                           onClick={() => updateQuantity(item.id, item.quantity - 1)}
                           disabled={updating === item.id || item.quantity <= 1}
-                          className="h-8 w-8 p-0"
+                          className="h-7 w-7 md:h-8 md:w-8 p-0"
                         >
                           <Minus className="h-3 w-3" />
                         </Button>
                         
-                        <span className="w-8 text-center font-medium">{item.quantity}</span>
+                        <span className="w-6 md:w-8 text-center font-medium text-sm md:text-base">{item.quantity}</span>
                         
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => updateQuantity(item.id, item.quantity + 1)}
                           disabled={updating === item.id || item.quantity >= item.products.stock_quantity}
-                          className="h-8 w-8 p-0"
+                          className="h-7 w-7 md:h-8 md:w-8 p-0"
                         >
                           <Plus className="h-3 w-3" />
                         </Button>
@@ -184,7 +184,7 @@ export default function CartPage() {
 
                     {/* Item Total */}
                     <div className="text-right mt-2">
-                      <p className="text-lg font-bold">
+                      <p className="text-base md:text-lg font-bold">
                         {formatPrice(item.products.price * item.quantity)}
                       </p>
                     </div>
@@ -196,10 +196,10 @@ export default function CartPage() {
 
           {/* Order Summary */}
           <div className="lg:col-span-1">
-            <div className="bg-gray-50 p-6 rounded-lg sticky top-4">
-              <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
+            <div className="bg-gray-50 p-4 md:p-6 rounded-lg sticky top-4">
+              <h2 className="text-lg md:text-xl font-semibold mb-3 md:mb-4">Order Summary</h2>
               
-              <div className="space-y-2 mb-4">
+              <div className="space-y-2 mb-3 md:mb-4">
                 <div className="flex justify-between text-sm">
                   <span>Subtotal ({totalItems} items)</span>
                   <span>{formatPrice(totalAmount)}</span>
@@ -209,26 +209,26 @@ export default function CartPage() {
                   <span className="text-green-600">FREE</span>
                 </div>
                 <div className="border-t pt-2">
-                  <div className="flex justify-between font-semibold text-lg">
+                  <div className="flex justify-between font-semibold text-base md:text-lg">
                     <span>Total</span>
                     <span>{formatPrice(totalAmount)}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="text-xs text-gray-500 mb-6">
+              <div className="text-xs text-gray-500 mb-4 md:mb-6">
                 <p>Free shipping on orders above ₹999</p>
               </div>
 
               <Button
-                className="w-full bg-black text-white hover:bg-gray-800"
+                className="w-full bg-black text-white hover:bg-gray-800 text-sm md:text-base"
                 size="lg"
                 onClick={() => router.push('/checkout')}
               >
                 Proceed to Checkout
               </Button>
 
-              <div className="mt-4 text-center">
+              <div className="mt-3 md:mt-4 text-center">
                 <Link href="/products" className="text-sm text-gray-600 hover:text-black">
                   Continue Shopping
                 </Link>

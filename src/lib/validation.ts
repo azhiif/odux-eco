@@ -146,5 +146,17 @@ export function validateAndSanitize<T>(schema: z.ZodSchema<T>, data: unknown): {
 }
 
 export function generateCSRFToken(): string {
-  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+  if (typeof window !== 'undefined') {
+    // Client-side: use crypto API if available, fallback to random
+    if (window.crypto && window.crypto.getRandomValues) {
+      const array = new Uint8Array(32)
+      window.crypto.getRandomValues(array)
+      return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('')
+    }
+    // Fallback for older browsers
+    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15) + Date.now().toString(36)
+  }
+  // Server-side: use Node crypto
+  const crypto = require('crypto')
+  return crypto.randomBytes(32).toString('hex')
 }

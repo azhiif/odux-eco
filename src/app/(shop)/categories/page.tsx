@@ -25,7 +25,9 @@ export default function CategoriesPage() {
 
   const fetchCategories = async () => {
     try {
-      console.log('Fetching categories...')
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Fetching categories...')
+      }
       const categoriesQ = query(
         collection(db, 'categories'),
         where('is_active', '==', true)
@@ -37,14 +39,18 @@ export default function CategoriesPage() {
       } as Category))
       console.log('Categories loaded:', categoriesList.length)
 
-      console.log('Fetching all active products for counting...')
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Fetching all active products for counting...')
+      }
       const productsQ = query(
         collection(db, 'products'),
         where('is_active', '==', true)
       )
       const productsSnap = await getDocs(productsQ)
       const allProducts = productsSnap.docs.map(doc => doc.data())
-      console.log('Total active products loaded:', allProducts.length)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Total active products loaded:', allProducts.length)
+      }
 
       const categoriesData = categoriesList.map(cat => {
         const matchingProducts = allProducts.filter(p => {
@@ -64,9 +70,13 @@ export default function CategoriesPage() {
       categoriesData.sort((a, b) => a.name.localeCompare(b.name))
       
       setCategories(categoriesData)
-      console.log('Categories with counts:', categoriesData.map(c => `${c.name}: ${c.product_count}`).join(', '))
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Categories with counts:', categoriesData.map(c => `${c.name}: ${c.product_count}`).join(', '))
+      }
     } catch (error) {
-      console.error('Error fetching categories:', error)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error fetching categories:', error)
+      }
     } finally {
       setLoading(false)
     }

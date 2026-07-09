@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { auth, db } from '@/lib/firebase'
 import { doc, getDoc } from 'firebase/firestore'
+import { isCurrentUserSuperAdmin } from '@/lib/roles'
 import { Shield, Loader2, LogOut, Menu, X, Home, Package, Tag, Users, Settings, Image as ImageIcon, FileText } from 'lucide-react'
 
 export default function AdminLayout({
@@ -14,6 +15,7 @@ export default function AdminLayout({
 }) {
   const [loading, setLoading] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
@@ -41,9 +43,14 @@ export default function AdminLayout({
         return
       }
 
+      // Check if user is superadmin
+      const superAdminStatus = await isCurrentUserSuperAdmin()
+      setIsSuperAdmin(superAdminStatus)
       setIsAuthenticated(true)
     } catch (error) {
-      console.error('Admin auth check failed:', error)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Admin auth check failed:', error)
+      }
       router.push('/admin/login')
     } finally {
       setLoading(false)
@@ -77,6 +84,8 @@ export default function AdminLayout({
     { name: 'Orders', href: '/admin/orders', icon: FileText },
     { name: 'Users', href: '/admin/users', icon: Users },
     { name: 'Banners', href: '/admin/banners', icon: ImageIcon },
+    ...(isSuperAdmin ? [{ name: 'Posts', href: '/admin/posts', icon: FileText }] : []),
+    ...(isSuperAdmin ? [{ name: 'SuperAdmin', href: '/admin/superadmin', icon: Shield }] : []),
     { name: 'Settings', href: '/admin/settings', icon: Settings },
   ]
 
@@ -92,7 +101,7 @@ export default function AdminLayout({
 
       {/* Sidebar */}
       <div className={`
-        fixed inset-y-0 left-0 z-50 w-64 bg-gray-800 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0
+        fixed inset-y-0 left-0 z-50 w-64 bg-gray-800 transform transition-transform duration-300 ease-in-out lg:translate-x-0
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         <div className="flex items-center justify-between h-16 px-6 bg-gray-900">

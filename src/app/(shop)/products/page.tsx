@@ -120,19 +120,19 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 bg-background">
+    <div className="container mx-auto px-4 py-6 md:py-8 bg-background">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2 text-foreground">All Products</h1>
-        <p className="text-muted-foreground">Discover our complete collection of custom art pieces</p>
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-2xl md:text-3xl font-bold mb-2 text-foreground">All Products</h1>
+        <p className="text-muted-foreground text-sm md:text-base">Discover our complete collection of custom art pieces</p>
       </div>
 
       {/* Filters */}
-      <div className="bg-muted p-6 rounded-lg mb-8 border border-border">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="bg-muted p-4 md:p-6 rounded-lg mb-6 md:mb-8 border border-border">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
           {/* Category Filter */}
           <select
-            className="w-full px-4 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-foreground bg-background text-foreground"
+            className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-border rounded-lg md:rounded-md focus:outline-none focus:ring-2 focus:ring-foreground bg-background text-foreground text-sm md:text-base"
             value={selectedCategory}
             onChange={(e) => {
               setSelectedCategory(e.target.value)
@@ -149,7 +149,7 @@ export default function ProductsPage() {
 
           {/* Sort */}
           <select
-            className="w-full px-4 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-foreground bg-background text-foreground"
+            className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-border rounded-lg md:rounded-md focus:outline-none focus:ring-2 focus:ring-foreground bg-background text-foreground text-sm md:text-base"
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
           >
@@ -167,7 +167,7 @@ export default function ProductsPage() {
               setSortBy('name')
               setCurrentPage(1)
             }}
-            className="w-full"
+            className="w-full text-sm md:text-base"
           >
             Clear Filters
           </Button>
@@ -177,7 +177,7 @@ export default function ProductsPage() {
       {/* Products Grid */}
       {products.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-gray-600 text-lg">No products found matching your criteria.</p>
+          <p className="text-gray-600 text-base md:text-lg">No products found matching your criteria.</p>
           <Button
             onClick={() => {
               setSelectedCategory('')
@@ -190,11 +190,11 @@ export default function ProductsPage() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
             {products.map((product) => (
-              <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+              <div key={product.id} className="bg-white rounded-lg shadow-sm md:shadow-md overflow-hidden hover:shadow-lg transition-shadow">
                 <Link href={`/products/${product.id}`}>
-                  <div className="relative h-64 bg-gray-200">
+                  <div className="relative h-48 md:h-64 bg-gray-200">
                     {product.image_urls[0] && (
                       <Image
                         src={product.image_urls[0]}
@@ -221,7 +221,7 @@ export default function ProductsPage() {
                   </div>
                 </Link>
                 
-                <div className="p-4">
+                <div className="p-3 md:p-4">
                   <div className="mb-2">
                     {product.categories && (
                       <Link href={`/categories/${product.categories.slug}`}>
@@ -233,17 +233,17 @@ export default function ProductsPage() {
                   </div>
                   
                   <Link href={`/products/${product.id}`}>
-                    <h3 className="text-lg font-semibold mb-2 hover:text-black transition-colors">
+                    <h3 className="text-base md:text-lg font-semibold mb-2 hover:text-black transition-colors line-clamp-1 md:line-clamp-2">
                       {product.name}
                     </h3>
                   </Link>
                   
-                  <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                  <p className="text-gray-600 text-xs md:text-sm mb-3 line-clamp-2 hidden md:block">
                     {product.description}
                   </p>
                   
                   <div className="flex items-center justify-between">
-                    <p className="text-xl font-bold text-black">
+                    <p className="text-base md:text-xl font-bold text-black">
                       {formatPrice(product.price)}
                     </p>
                     
@@ -251,10 +251,11 @@ export default function ProductsPage() {
                       size="sm"
                       onClick={() => handleAddToCart(product.id)}
                       disabled={product.stock_quantity === 0}
-                      className="bg-black text-white hover:bg-gray-800"
+                      className="bg-black text-white hover:bg-gray-800 text-xs md:text-sm"
                     >
-                      <ShoppingCart className="h-4 w-4 mr-1" />
-                      {product.stock_quantity === 0 ? 'Out of Stock' : 'Add to Cart'}
+                      <ShoppingCart className="h-3 w-3 md:h-4 md:w-4 mr-1" />
+                      <span className="hidden md:inline">{product.stock_quantity === 0 ? 'Out of Stock' : 'Add to Cart'}</span>
+                      <span className="md:hidden">{product.stock_quantity === 0 ? 'Sold' : 'Add'}</span>
                     </Button>
                   </div>
                 </div>
@@ -264,16 +265,17 @@ export default function ProductsPage() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex justify-center items-center space-x-2">
+            <div className="flex flex-col sm:flex-row justify-center items-center space-y-2 sm:space-y-0 sm:space-x-2">
               <Button
                 variant="outline"
                 onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                 disabled={currentPage === 1}
+                className="w-full sm:w-auto"
               >
                 Previous
               </Button>
               
-              <span className="text-gray-600">
+              <span className="text-gray-600 text-sm">
                 Page {currentPage} of {totalPages}
               </span>
               
@@ -281,6 +283,7 @@ export default function ProductsPage() {
                 variant="outline"
                 onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                 disabled={currentPage === totalPages}
+                className="w-full sm:w-auto"
               >
                 Next
               </Button>

@@ -172,7 +172,7 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <h3 className="font-semibold mb-1">Phone</h3>
-                  <p className="text-gray-600">+91 9072270271</p>
+                  <p className="text-gray-600">{process.env.NEXT_PUBLIC_CONTACT_PHONE || '+91 9072270271'}</p>
                   <p className="text-sm text-gray-500">Mon-Sat, 10AM-7PM</p>
                 </div>
               </div>
@@ -183,7 +183,7 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <h3 className="font-semibold mb-1">Email</h3>
-                  <p className="text-gray-600">support@odux.art</p>
+                  <p className="text-gray-600">{process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'support@odux.art'}</p>
                   <p className="text-sm text-gray-500">24/7 Support</p>
                 </div>
               </div>
@@ -194,7 +194,7 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <h3 className="font-semibold mb-1">WhatsApp</h3>
-                  <p className="text-gray-600">+91 9072270271</p>
+                  <p className="text-gray-600">{process.env.NEXT_PUBLIC_CONTACT_PHONE || '+91 9072270271'}</p>
                   <p className="text-sm text-gray-500">Quick responses</p>
                 </div>
               </div>
@@ -240,7 +240,7 @@ export default function ContactPage() {
               </a>
               
               <a
-                href="mailto:support@odux.art"
+                href={`mailto:${process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'support@odux.art'}`}
                 className="block w-full bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors text-center"
               >
                 Send Email

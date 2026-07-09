@@ -51,7 +51,9 @@ export default function NewCategoryPage() {
 
       setUploadedImage(publicUrl)
     } catch (error) {
-      console.error('Error uploading image:', error)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error uploading image:', error)
+      }
       alert('Error uploading image. Please try again.')
     } finally {
       setLoading(false)
@@ -78,8 +80,10 @@ export default function NewCategoryPage() {
 
     setLoading(true)
     try {
-      console.log('Creating category with data:', formData)
-      console.log('Uploaded image:', uploadedImage)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Creating category with data:', formData)
+        console.log('Uploaded image:', uploadedImage)
+      }
       
       const categoryData = {
         name: formData.name,
@@ -90,7 +94,9 @@ export default function NewCategoryPage() {
         created_at: new Date().toISOString()
       }
 
-      console.log('Final category data:', categoryData)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Final category data:', categoryData)
+      }
 
       // Only check slug for duplicates in Firestore standard setup safely
       const q = query(collection(db, 'categories'), where('slug', '==', formData.slug))
@@ -103,10 +109,14 @@ export default function NewCategoryPage() {
 
       const docRef = await addDoc(collection(db, 'categories'), categoryData)
 
-      console.log('Category created successfully:', docRef.id)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Category created successfully:', docRef.id)
+      }
       router.push('/admin')
     } catch (error) {
-      console.error('Error creating category:', error)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error creating category:', error)
+      }
       alert('Error creating category. Please try again.')
     } finally {
       setLoading(false)

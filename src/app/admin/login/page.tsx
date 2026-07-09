@@ -4,12 +4,14 @@ import React, { useState, useEffect, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 import { auth, db } from '@/lib/firebase'
 import { signInWithEmailAndPassword } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
 import { validateAndSanitize, generateCSRFToken, emailSchema } from '@/lib/validation'
 import { phoneAuthService } from '@/lib/firebase'
-import { Shield, Loader2, Eye, EyeOff, Lock, Mail, AlertCircle, Search } from 'lucide-react'
+import { Shield, Loader2, Eye, EyeOff, Lock, Mail, AlertCircle } from 'lucide-react'
 
 function AdminLoginContent() {
   const [email, setEmail] = useState('')
@@ -94,7 +96,9 @@ function AdminLoginContent() {
       }
 
     } catch (error: any) {
-      console.error('Admin login error:', error)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Admin login error:', error)
+      }
       setError(error.message || 'Invalid email or password')
     } finally {
       setLoading(false)
@@ -127,7 +131,9 @@ function AdminLoginContent() {
         router.push('/admin/dashboard')
       }
     } catch (error: any) {
-      console.error('Admin Google login error:', error)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Admin Google login error:', error)
+      }
       if (error.code !== 'auth/popup-closed-by-user') {
         setError(error.message || 'Error signing in with Google')
       }
@@ -146,17 +152,16 @@ function AdminLoginContent() {
       </div>
 
       <div className="relative z-10 w-full max-w-md">
-        <div className="bg-gray-800/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-700/50 p-8">
-          {/* Header */}
-          <div className="text-center mb-8">
+        <Card className="bg-gray-800/90 backdrop-blur-xl border-gray-700/50">
+          <CardHeader className="text-center">
             <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl mb-6">
               <Shield className="h-10 w-10 text-white" />
             </div>
-            <h1 className="text-3xl font-bold mb-2">
-              <span className="text-white">Admin Login</span>
-            </h1>
+            <CardTitle className="text-3xl text-white mb-2">Admin Login</CardTitle>
             <p className="text-gray-400">Access your admin dashboard</p>
-          </div>
+          </CardHeader>
+
+          <CardContent>
 
           {/* Error Display */}
           {error && (
@@ -218,12 +223,12 @@ function AdminLoginContent() {
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Mail className="h-5 w-5 text-gray-400" />
                 </div>
-                <input
+                <Input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-700/50 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="pl-10 bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 focus:ring-blue-500"
                   placeholder="admin@example.com"
                 />
               </div>
@@ -237,12 +242,12 @@ function AdminLoginContent() {
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Lock className="h-5 w-5 text-gray-400" />
                 </div>
-                <input
+                <Input
                   type={showPassword ? 'text' : 'password'}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-12 py-3 bg-gray-700/50 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="pl-10 pr-12 bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 focus:ring-blue-500"
                   placeholder="••••••••"
                 />
                 <button
@@ -300,7 +305,8 @@ function AdminLoginContent() {
               ← Back to User Login
             </Link>
           </div>
-        </div>
+        </CardContent>
+        </Card>
       </div>
     </div>
   )

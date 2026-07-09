@@ -53,7 +53,9 @@ export default function CategoryPage() {
 
   const fetchCategory = async () => {
     try {
-      console.log('Fetching category for slug:', slug)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Fetching category for slug:', slug)
+      }
       const q = query(collection(db, 'categories'), where('slug', '==', slug), where('is_active', '==', true))
       const snapshot = await getDocs(q)
 
@@ -63,11 +65,15 @@ export default function CategoryPage() {
         setCategory(data)
         console.log('Category found:', data.name)
       } else {
-        console.warn('No active category found for slug:', slug)
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('No active category found for slug:', slug)
+        }
         setCategory(null)
       }
     } catch (error) {
-      console.error('Error fetching category:', error)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error fetching category:', error)
+      }
     }
   }
 
@@ -75,7 +81,9 @@ export default function CategoryPage() {
     if (!category) return
     setLoading(true)
     try {
-      console.log('Fetching all active products for robust counting/filtering...')
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Fetching all active products for robust counting/filtering...')
+      }
       const q = query(
         collection(db, 'products'),
         where('is_active', '==', true)
@@ -83,7 +91,9 @@ export default function CategoryPage() {
 
       const snapshot = await getDocs(q)
       const allProducts = snapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() as any) } as Product))
-      console.log('Total active products loaded globally:', allProducts.length)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Total active products loaded globally:', allProducts.length)
+      }
 
       // Filter products for this specific category using robust matching
       const filteredProducts = allProducts.filter(p => {
@@ -235,7 +245,7 @@ export default function CategoryPage() {
             </Link>
             <div className="text-gray-500">
               <p>Need something specific? Contact us:</p>
-              <p>WhatsApp: +91 9072270271</p>
+              <p>WhatsApp: {process.env.NEXT_PUBLIC_CONTACT_PHONE || '+91 9072270271'}</p>
             </div>
           </div>
         </div>

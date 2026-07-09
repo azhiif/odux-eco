@@ -72,7 +72,9 @@ export default function CustomOrderPage() {
 
       await addDoc(collection(db, 'custom_orders'), orderData)
 
-      console.log('Custom order submitted:', orderData)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Custom order submitted:', orderData)
+      }
       
       // Show success message
       alert('Custom order submitted successfully! We will contact you soon.')

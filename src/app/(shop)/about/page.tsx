@@ -195,17 +195,17 @@ export default function AboutPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
             <h3 className="font-semibold mb-2">WhatsApp</h3>
-            <p className="text-gray-600">+91 9072270271</p>
+            <p className="text-gray-600">{process.env.NEXT_PUBLIC_CONTACT_PHONE || '+91 9072270271'}</p>
             <p className="text-sm text-gray-500">Mon-Sat, 10AM-7PM</p>
           </div>
           <div>
             <h3 className="font-semibold mb-2">Email</h3>
-            <p className="text-gray-600">support@odux.art</p>
+            <p className="text-gray-600">{process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'support@odux.art'}</p>
             <p className="text-sm text-gray-500">24/7 Support</p>
           </div>
           <div>
             <h3 className="font-semibold mb-2">Instagram</h3>
-            <p className="text-gray-600">@odux.art</p>
+            <p className="text-gray-600">{process.env.NEXT_PUBLIC_INSTAGRAM_HANDLE || '@odux.art'}</p>
             <p className="text-sm text-gray-500">Daily Inspiration</p>
           </div>
         </div>

@@ -39,7 +39,9 @@ export async function openPaymentModal(options: PaymentOptions) {
     theme: options.theme,
     modal: {
       ondismiss: function() {
-        console.log('Payment modal dismissed')
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Payment modal dismissed')
+        }
       }
     }
   })

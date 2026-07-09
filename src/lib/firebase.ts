@@ -24,8 +24,8 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
 }
 
-// Log config on initialization (masked for security)
-if (typeof window !== 'undefined') {
+// Log config on initialization (masked for security) - only in development
+if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
   console.log('Firebase Initializing with Project:', firebaseConfig.projectId)
   console.log('Firebase App ID check:', firebaseConfig.appId?.substring(0, 10) + '...')
 }
@@ -51,9 +51,9 @@ export class PhoneAuthService {
       try {
         window.recaptchaVerifier.clear()
         window.recaptchaVerifier = null
-        console.log('Existing reCAPTCHA cleared')
+        // console.log('Existing reCAPTCHA cleared')
       } catch (e) {
-        console.warn('Error clearing reCAPTCHA:', e)
+        // console.warn('Error clearing reCAPTCHA:', e)
         window.recaptchaVerifier = null
       }
     }
@@ -66,7 +66,7 @@ export class PhoneAuthService {
     }
 
     try {
-      console.log('Starting fresh OTP flow for:', phoneNumber)
+      // console.log('Starting fresh OTP flow for:', phoneNumber)
 
       // 1. Force standard reCAPTCHA v2 (bypass Enterprise)
       if (auth.settings) {
@@ -87,31 +87,33 @@ export class PhoneAuthService {
       window.recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
         size: 'invisible',
         callback: () => {
-          console.log('reCAPTCHA solved')
+          // console.log('reCAPTCHA solved')
         },
         'expired-callback': () => {
-          console.log('reCAPTCHA expired, clearing...')
+          // console.log('reCAPTCHA expired, clearing...')
           this.clearRecaptcha()
         }
       })
 
       // 5. Explicitly render the verifier before use
-      console.log('Explicitly rendering reCAPTCHA...')
+      // console.log('Explicitly rendering reCAPTCHA...')
       await window.recaptchaVerifier.render()
 
       // 6. Use this fresh rendered instance immediately
       const result = await signInWithPhoneNumber(auth, phoneNumber, window.recaptchaVerifier)
-      console.log('OTP sent successfully with fresh reCAPTCHA v2')
+      // console.log('OTP sent successfully with fresh reCAPTCHA v2')
       return result
       
     } catch (error: any) {
-      console.error('Send OTP Error Details:', {
-        code: error.code,
-        message: error.message,
-        stack: error.stack,
-        configProjectId: firebaseConfig.projectId,
-        configAuthDomain: firebaseConfig.authDomain
-      })
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Send OTP Error Details:', {
+          code: error.code,
+          message: error.message,
+          stack: error.stack,
+          configProjectId: firebaseConfig.projectId,
+          configAuthDomain: firebaseConfig.authDomain
+        })
+      }
       
       // If any error occurs, clear for safety
       this.clearRecaptcha()
@@ -126,7 +128,9 @@ export class PhoneAuthService {
       const result = await confirmationResult.confirm(verificationCode)
       return result.user
     } catch (error: any) {
-      console.error('OTP Verification Error:', error)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('OTP Verification Error:', error)
+      }
       throw error
     }
   }
@@ -138,7 +142,9 @@ export class PhoneAuthService {
       const result = await signInWithPopup(auth, provider)
       return result.user
     } catch (error: any) {
-      console.error('Google Sign-in Error:', error)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Google Sign-in Error:', error)
+      }
       throw error
     }
   }
@@ -152,7 +158,9 @@ export class PhoneAuthService {
       }
       return result.user
     } catch (error: any) {
-      console.error('Email Sign-up Error:', error)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Email Sign-up Error:', error)
+      }
       throw error
     }
   }
@@ -163,7 +171,9 @@ export class PhoneAuthService {
       const result = await signInWithEmailAndPassword(auth, email, password)
       return result.user
     } catch (error: any) {
-      console.error('Email Sign-in Error:', error)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Email Sign-in Error:', error)
+      }
       throw error
     }
   }
@@ -173,7 +183,9 @@ export class PhoneAuthService {
     try {
       await sendPasswordResetEmail(auth, email)
     } catch (error: any) {
-      console.error('Password Reset Error:', error)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Password Reset Error:', error)
+      }
       throw error
     }
   }

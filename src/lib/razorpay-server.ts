@@ -26,7 +26,9 @@ export async function createOrder(details: OrderDetails) {
     
     return order
   } catch (error) {
-    console.error('Error creating Razorpay order:', error)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error creating Razorpay order:', error)
+    }
     throw error
   }
 }

@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Script from "next/script";
-import Navbar from "@/components/layout/navbar";
-import Footer from "@/components/layout/footer";
 import { Inter, Playfair_Display } from "next/font/google";
 
 const inter = Inter({
@@ -30,11 +28,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} ${playfair.variable} font-body antialiased bg-white text-gray-900`}>
-        <Navbar />
-        <main className="pt-16">
-          {children}
-        </main>
-        <Footer />
+        {children}
         <Script 
           src="https://checkout.razorpay.com/v1/checkout.js"
           strategy="lazyOnload"

@@ -24,7 +24,9 @@ export async function getBanners(): Promise<Banner[]> {
       .filter(b => b.is_active)
       .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
   } catch (error) {
-    console.error('Error fetching banners:', error)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error fetching banners:', error)
+    }
     return []
   }
 }
@@ -34,7 +36,9 @@ export async function createBanner(banner: Omit<Banner, 'id'>) {
     const docRef = await addDoc(collection(db, 'banners'), banner)
     return { id: docRef.id, ...banner }
   } catch (error) {
-    console.error('Error creating banner:', error)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error creating banner:', error)
+    }
     throw error
   }
 }
@@ -45,7 +49,9 @@ export async function updateBanner(id: string, banner: Partial<Banner>) {
     await updateDoc(bannerRef, banner)
     return { id, ...banner }
   } catch (error) {
-    console.error('Error updating banner:', error)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error updating banner:', error)
+    }
     throw error
   }
 }
@@ -54,7 +60,9 @@ export async function deleteBanner(id: string) {
   try {
     await deleteDoc(doc(db, 'banners', id))
   } catch (error) {
-    console.error('Error deleting banner:', error)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error deleting banner:', error)
+    }
     throw error
   }
 }
