@@ -1,0 +1,54 @@
+rules_version = '2'
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+             firestore.get(/databases/(default)/documents/user_profiles/$(request.auth.uid)).data.is_admin == true;
+    }
+    
+    function isSuperAdmin() {
+      return isAuthenticated() && 
+             firestore.get(/databases/(default)/documents/user_profiles/$(request.auth.uid)).data.is_superadmin == true;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Custom images - user can upload their own images
+    match /custom_images/{userId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if isOwner(userId) || isAdmin();
+    }
+
+    // Product images - public read, admin write
+    match /product_images/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Banner images - public read, superadmin write
+    match /banner_images/{allPaths=**} {
+      allow read: if true;
+      allow write: if isSuperAdmin();
+    }
+
+    // Category images - public read, admin write
+    match /category_images/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // General uploads - fallback
+    match /{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}
