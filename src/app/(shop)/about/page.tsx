@@ -5,10 +5,37 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Heart, Award, Users, Palette } from 'lucide-react'
+import { FAQStructuredData } from '@/components/seo/StructuredData'
+
+const faqData = [
+  {
+    question: 'What is Odux Art?',
+    answer: 'Odux Art is a premium custom art frame and personalized gift service that transforms your precious memories into stunning artwork. We specialize in birthday gifts, wedding art, anniversary presents, and custom frames for all special occasions.',
+  },
+  {
+    question: 'How do I create custom art with Odux?',
+    answer: 'Simply upload your photo through our custom order page, choose your preferred frame style and size, and our artists will transform your image into beautiful custom artwork. We offer various styles including digital art, traditional frames, and modern wall art.',
+  },
+  {
+    question: 'What types of custom gifts do you offer?',
+    answer: 'We offer a wide range of personalized gifts including custom photo frames, birthday art, wedding portraits, anniversary gifts, wall art, gift sets, photo prints, and special occasion artwork. Each piece is crafted with premium materials for lasting quality.',
+  },
+  {
+    question: 'How long does delivery take?',
+    answer: 'Our standard delivery time is 5-7 business days across India. Express delivery options are available for urgent orders. We ship from Kerala and provide tracking for all orders.',
+  },
+  {
+    question: 'What is your return policy?',
+    answer: 'We offer a 7-day return policy for manufacturing defects. Since each piece is custom-made, we cannot accept returns for personal preference changes. However, we work closely with you to ensure your satisfaction before final production.',
+  },
+]
 
 export default function AboutPage() {
   return (
     <div className="container mx-auto px-4 py-8 bg-background text-foreground">
+      {/* FAQ Structured Data for AEO */}
+      <FAQStructuredData data={faqData} />
+      
       {/* Hero Section */}
       <div className="text-center mb-16">
         <h1 className="text-4xl md:text-5xl font-bold mb-6">

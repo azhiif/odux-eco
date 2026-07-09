@@ -1,0 +1,14 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://oduxart.com/sitemap.xml
+
+# Disallow admin areas
+Disallow: /admin/
+Disallow: /auth/
+Disallow: /api/
+
+# Allow search engines to crawl
+Crawl-delay: 1

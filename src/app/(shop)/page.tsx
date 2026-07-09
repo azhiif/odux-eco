@@ -10,6 +10,7 @@ import { getBanners } from '@/lib/banner'
 import { formatPrice } from '@/lib/utils'
 import { validateAndSanitize } from '@/lib/validation'
 import { ErrorBoundary } from '@/components/ui/error-boundary'
+import { OrganizationStructuredData, LocalBusinessStructuredData } from '@/components/seo/StructuredData'
 import { 
   Heart, 
   Star, 
@@ -35,7 +36,7 @@ import {
   CheckCircle
 } from 'lucide-react'
 import Head from 'next/head'
-import '../lib/env' // Validate environment on import
+import '@/lib/env' // Validate environment on import
 
 interface Category {
   id: string
@@ -180,6 +181,55 @@ export default function Home() {
   return (
     <ErrorBoundary>
       <>
+        {/* Structured Data for SEO */}
+        <OrganizationStructuredData
+          data={{
+            name: 'Odux Art',
+            url: 'https://oduxart.com',
+            logo: 'https://oduxart.com/logo.png',
+            description: 'Transform your precious memories into stunning custom art frames. Perfect for birthdays, weddings, anniversaries, and special occasions.',
+            address: {
+              streetAddress: 'Thayyalingal',
+              addressLocality: 'Malappuram',
+              addressRegion: 'Kerala',
+              postalCode: '676517',
+              addressCountry: 'IN',
+            },
+            contactPoint: {
+              telephone: '+91 9072270271',
+              contactType: 'customer service',
+              email: 'support@odux.art',
+            },
+            sameAs: [
+              'https://instagram.com/odux.art',
+              'https://facebook.com/odux.art',
+            ],
+          }}
+        />
+        <LocalBusinessStructuredData
+          data={{
+            name: 'Odux Art',
+            url: 'https://oduxart.com',
+            logo: 'https://oduxart.com/logo.png',
+            description: 'Transform your precious memories into stunning custom art frames. Perfect for birthdays, weddings, anniversaries, and special occasions.',
+            address: {
+              streetAddress: 'Thayyalingal',
+              addressLocality: 'Malappuram',
+              addressRegion: 'Kerala',
+              postalCode: '676517',
+              addressCountry: 'IN',
+            },
+            contactPoint: {
+              telephone: '+91 9072270271',
+              contactType: 'customer service',
+              email: 'support@odux.art',
+            },
+            sameAs: [
+              'https://instagram.com/odux.art',
+              'https://facebook.com/odux.art',
+            ],
+          }}
+        />
         <div className={`min-h-screen bg-white ${!isLoaded ? 'opacity-0' : 'opacity-100'} transition-all duration-1000`}>
         {/* Hero Banner - Mobile First */}
         <section className="relative -mt-4">
