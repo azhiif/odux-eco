@@ -40,10 +40,10 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // Banners - public read active, superadmin write
+    // Banners - public read, admin write
     match /banners/{bannerId} {
       allow read: if true;
-      allow write: if isSuperAdmin();
+      allow write: if isAdmin();
     }
 
     // Posts - public read published, superadmin write

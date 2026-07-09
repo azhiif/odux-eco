@@ -33,10 +33,16 @@ service firebase.storage {
       allow write: if isAdmin();
     }
 
-    // Banner images - public read, superadmin write
+    // Banner images - public read, admin write
     match /banner_images/{allPaths=**} {
       allow read: if true;
-      allow write: if isSuperAdmin();
+      allow write: if isAdmin();
+    }
+
+    // Banners folder - public read, admin write
+    match /banners/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
     // Category images - public read, admin write
