@@ -14,15 +14,18 @@
     "pre-commit": "npm run lint:fix && npm run type-check"
   },
   "dependencies": {
+    "@next/third-parties": "^16.2.10",
     "@radix-ui/react-slot": "^1.2.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "firebase": "^12.10.0",
+    "framer-motion": "^12.42.2",
     "lucide-react": "^0.575.0",
     "next": "^16.2.10",
     "razorpay": "^2.9.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "resend": "^6.17.2",
     "tailwind-merge": "^3.5.0",
     "zod": "^4.3.6"
   },

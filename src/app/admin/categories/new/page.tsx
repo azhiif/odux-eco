@@ -3,11 +3,10 @@
 import React, { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
 import { db, storage } from '@/lib/firebase'
 import { collection, addDoc, query, where, getDocs } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
-import { ArrowLeft, Upload, X, Image as ImageIcon } from 'lucide-react'
+import { ArrowLeft, Upload, X, Image as ImageIcon, Tag } from 'lucide-react'
 
 export default function NewCategoryPage() {
   const router = useRouter()
@@ -21,10 +20,7 @@ export default function NewCategoryPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const generateSlug = (name: string) => {
-    return name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)/g, '')
+    return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
   }
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -48,31 +44,22 @@ export default function NewCategoryPage() {
       
       await uploadBytes(storageRef, file)
       const publicUrl = await getDownloadURL(storageRef)
-
       setUploadedImage(publicUrl)
     } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Error uploading image:', error)
-      }
       alert('Error uploading image. Please try again.')
     } finally {
       setLoading(false)
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ''
-      }
+      if (fileInputRef.current) fileInputRef.current.value = ''
     }
   }
 
   const removeImage = () => {
     setUploadedImage('')
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''
-    }
+    if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
     if (!formData.name || !formData.slug) {
       alert('Please fill in all required fields')
       return
@@ -80,11 +67,6 @@ export default function NewCategoryPage() {
 
     setLoading(true)
     try {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Creating category with data:', formData)
-        console.log('Uploaded image:', uploadedImage)
-      }
-      
       const categoryData = {
         name: formData.name,
         description: formData.description,
@@ -94,11 +76,6 @@ export default function NewCategoryPage() {
         created_at: new Date().toISOString()
       }
 
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Final category data:', categoryData)
-      }
-
-      // Only check slug for duplicates in Firestore standard setup safely
       const q = query(collection(db, 'categories'), where('slug', '==', formData.slug))
       const duplicateSnap = await getDocs(q)
       if (!duplicateSnap.empty) {
@@ -107,16 +84,9 @@ export default function NewCategoryPage() {
         return
       }
 
-      const docRef = await addDoc(collection(db, 'categories'), categoryData)
-
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Category created successfully:', docRef.id)
-      }
-      router.push('/admin')
+      await addDoc(collection(db, 'categories'), categoryData)
+      router.push('/admin/categories')
     } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Error creating category:', error)
-      }
       alert('Error creating category. Please try again.')
     } finally {
       setLoading(false)
@@ -124,135 +94,128 @@ export default function NewCategoryPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-2xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <Link href="/admin" className="inline-flex items-center text-gray-600 hover:text-black mb-4">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
-          </Link>
-          <h1 className="text-3xl font-bold mb-2">Add New Category</h1>
-          <p className="text-gray-600">Create a new category for your products</p>
+    <div className="max-w-3xl mx-auto space-y-8 pb-10">
+      <div className="mb-8">
+        <Link href="/admin/categories" className="inline-flex items-center text-gray-400 hover:text-brand-orange mb-4 font-bold transition-colors">
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Categories
+        </Link>
+        <h1 className="text-display text-gray-900 mb-2 flex items-center">
+          <Tag className="h-8 w-8 mr-3 text-brand-orange" />
+          Add Category
+        </h1>
+        <p className="text-gray-500 font-medium">Create a new section for your products.</p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-8">
+        
+        <div className="premium-card bg-white p-8">
+          <h2 className="text-heading-3 text-gray-900 mb-6">Category Details</h2>
+          
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Category Name *</label>
+              <input
+                type="text"
+                required
+                value={formData.name}
+                onChange={handleNameChange}
+                className="form-input"
+                placeholder="e.g., Birthday Gifts"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">URL Slug *</label>
+              <input
+                type="text"
+                required
+                value={formData.slug}
+                onChange={(e) => setFormData({...formData, slug: e.target.value})}
+                className="form-input"
+                placeholder="birthday-gifts"
+              />
+              <p className="text-sm font-bold text-gray-400 mt-2 font-mono">
+                /categories/{formData.slug || 'slug'}
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Description</label>
+              <textarea
+                value={formData.description}
+                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                rows={4}
+                className="form-input rounded-2xl"
+                placeholder="Describe this category..."
+              />
+            </div>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Basic Information */}
-          <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
-            <h2 className="text-xl font-semibold mb-6">Category Information</h2>
-            
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Category Name *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.name}
-                  onChange={handleNameChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-black"
-                  placeholder="e.g., Birthday Gifts"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  URL Slug *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.slug}
-                  onChange={(e) => setFormData({...formData, slug: e.target.value})}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-black"
-                  placeholder="birthday-gifts"
-                />
-                <p className="text-sm text-gray-500 mt-1">
-                  This will be used in the URL: /categories/{formData.slug}
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Description
-                </label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
-                  rows={4}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-black"
-                  placeholder="Describe this category and what types of products it contains..."
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Category Image */}
-          <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
-            <h2 className="text-xl font-semibold mb-6">Category Image</h2>
-            
-            <div className="mb-6">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                className="hidden"
-                id="category-image-upload"
-              />
-              <label
-                htmlFor="category-image-upload"
-                className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
-              >
-                <Upload className="h-4 w-4 mr-2" />
-                Upload Category Image
-              </label>
-              <p className="text-sm text-gray-500 mt-2">Recommended size: 800x600px, PNG or JPG</p>
-            </div>
-
-            {uploadedImage ? (
-              <div className="relative">
-                <img
-                  src={uploadedImage}
-                  alt="Category preview"
-                  className="w-full h-64 object-cover rounded-lg"
-                />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={removeImage}
-                  className="absolute top-2 right-2 bg-white hover:bg-red-50 hover:text-red-600"
-                >
-                  <X className="h-3 w-3" />
-                </Button>
-              </div>
-            ) : (
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center">
-                <ImageIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600">No image uploaded</p>
-                <p className="text-sm text-gray-500 mt-2">Upload an image to represent this category</p>
-              </div>
-            )}
-          </div>
-
-          {/* Actions */}
-          <div className="flex justify-end space-x-4">
-            <Link href="/admin">
-              <Button variant="outline">
-                Cancel
-              </Button>
-            </Link>
-            <Button
-              type="submit"
-              disabled={loading}
-              className="bg-black text-white hover:bg-gray-800"
+        <div className="premium-card bg-white p-8">
+          <h2 className="text-heading-3 text-gray-900 mb-6">Category Image</h2>
+          
+          <div className="mb-6">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+              id="category-image-upload"
+            />
+            <label
+              htmlFor="category-image-upload"
+              className="cursor-pointer inline-flex flex-col items-center justify-center px-6 py-8 border-2 border-dashed border-gray-300 rounded-2xl bg-gray-50 hover:bg-gray-100 hover:border-brand-orange focus:outline-none transition-colors w-full group"
             >
-              {loading ? 'Creating...' : 'Create Category'}
-            </Button>
+              <Upload className="h-8 w-8 mb-3 text-gray-400 group-hover:text-brand-orange transition-colors" />
+              <span className="font-bold text-gray-700 mb-1">Click to upload image</span>
+              <span className="text-sm font-medium text-gray-500">Recommended size: 800x600px</span>
+            </label>
           </div>
-        </form>
-      </div>
+
+          {uploadedImage ? (
+            <div className="relative group rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
+              <img
+                src={uploadedImage}
+                alt="Category preview"
+                className="w-full h-64 object-cover"
+              />
+              <button
+                type="button"
+                onClick={removeImage}
+                className="absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm text-red-500 hover:bg-red-500 hover:text-white rounded-full flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 shadow-md"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+          ) : (
+            <div className="border-2 border-dashed border-gray-200 rounded-2xl p-12 text-center bg-white">
+              <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <ImageIcon className="h-10 w-10 text-gray-300" />
+              </div>
+              <p className="text-gray-500 font-bold mb-1">No image uploaded</p>
+              <p className="text-sm font-medium text-gray-400">Upload a banner image to represent this category</p>
+            </div>
+          )}
+        </div>
+
+        <div className="flex justify-end space-x-4 pt-4 border-t-2 border-gray-100">
+          <Link href="/admin/categories">
+            <button type="button" className="px-6 py-3 rounded-full font-bold text-gray-600 hover:bg-gray-100 transition-colors">
+              Cancel
+            </button>
+          </Link>
+          <button
+            type="submit"
+            disabled={loading}
+            className="bg-brand-orange hover:bg-orange-600 text-white px-8 py-3 rounded-full font-bold shadow-md hover:shadow-lg transition-all"
+          >
+            {loading ? 'Creating...' : 'Create Category'}
+          </button>
+        </div>
+      </form>
     </div>
   )
 }

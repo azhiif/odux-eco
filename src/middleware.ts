@@ -37,11 +37,11 @@ export function middleware(request: NextRequest) {
   response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
   response.headers.set('Content-Security-Policy', 
     "default-src 'self'; " +
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://www.google.com https://apis.google.com https://*.firebaseapp.com https://*.firebase.com https://checkout.razorpay.com; " +
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://www.google.com https://apis.google.com https://*.firebaseapp.com https://*.firebase.com https://checkout.razorpay.com https://cdn.razorpay.com; " +
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
     "img-src 'self' data: https: https://www.google.com https://firebasestorage.googleapis.com https://*.razorpay.com; " +
     "font-src 'self' https://fonts.gstatic.com; " +
-    "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://www.google.com https://apis.google.com https://identitytoolkit.googleapis.com https://api.razorpay.com; " +
+    "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://www.google.com https://apis.google.com https://identitytoolkit.googleapis.com https://api.razorpay.com https://cdn.razorpay.com; " +
     "frame-src 'self' https://*.firebaseapp.com https://www.google.com https://*.firebase.com https://api.razorpay.com;"
   )
 

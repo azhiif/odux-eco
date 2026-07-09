@@ -1,184 +1,99 @@
+'use client'
+
 import React from 'react'
 import Link from 'next/link'
 import { Shield, Eye, Lock, Mail, ArrowLeft } from 'lucide-react'
+import { motion } from 'framer-motion'
 
 export default function PrivacyPolicy() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50">
-      <div className="container mx-auto px-4 py-8 md:py-12 max-w-4xl">
-        {/* Header */}
-        <div className="mb-8">
-          <Link href="/" className="inline-flex items-center text-purple-600 hover:text-purple-800 mb-6 group transition-colors">
-            <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3 group-hover:bg-purple-200 transition-colors">
-              <ArrowLeft className="h-4 w-4" />
-            </div>
-            <span className="font-medium text-sm md:text-base">Back to Home</span>
-          </Link>
-          
-          <div className="text-center">
-            <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-100 to-pink-100 rounded-full mb-6">
-              <Shield className="h-5 w-5 text-purple-600 mr-2" />
-              <span className="text-purple-700 font-medium">Your Privacy Matters</span>
-            </div>
-            <h1 className="text-3xl md:text-4xl font-bold mb-4">
-              <span className="gradient-text-purple">Privacy Policy</span>
-            </h1>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-            </p>
-          </div>
-        </div>
+    <div className="min-h-screen bg-background pb-16 pt-12 relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-pink/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none z-0" />
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-brand-orange/10 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3 pointer-events-none z-0" />
 
-        {/* Content */}
-        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 md:p-8 space-y-8">
-          {/* Introduction */}
+      <div className="container-premium relative z-10 max-w-4xl">
+        <Link href="/" className="inline-flex items-center text-gray-500 hover:text-brand-pink mb-8 font-bold group transition-colors">
+          <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center mr-3 shadow-sm group-hover:bg-brand-pink group-hover:text-white transition-all">
+            <ArrowLeft className="h-5 w-5" />
+          </div>
+          <span>Back to Magic</span>
+        </Link>
+        
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-12">
+          <div className="inline-flex items-center px-6 py-2 bg-pink-50 text-brand-pink rounded-full mb-6 font-bold border-2 border-pink-100 shadow-sm">
+            <Shield className="h-5 w-5 mr-2" />
+            Your Privacy Matters
+          </div>
+          <h1 className="text-display text-foreground mb-4">
+            Privacy <span className="text-brand-pink">Policy</span>
+          </h1>
+          <p className="text-body-large text-gray-500 max-w-2xl mx-auto">
+            Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+          </p>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="premium-card bg-white p-8 md:p-12 space-y-12">
+          
           <section>
-            <h2 className="text-xl md:text-2xl font-semibold mb-4 flex items-center">
-              <Eye className="h-6 w-6 text-purple-600 mr-3" />
+            <h2 className="text-heading-3 text-foreground mb-4 flex items-center">
+              <div className="w-10 h-10 bg-pink-50 rounded-xl flex items-center justify-center mr-4 text-brand-pink shrink-0">
+                <Eye className="h-5 w-5" />
+              </div>
               Introduction
             </h2>
-            <p className="text-gray-700 leading-relaxed">
+            <p className="text-gray-600 font-medium leading-relaxed pl-14">
               At Odux Art, we are committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website and use our services. Please read this policy carefully.
             </p>
           </section>
 
-          {/* Information We Collect */}
           <section>
-            <h2 className="text-xl md:text-2xl font-semibold mb-4 flex items-center">
-              <Mail className="h-6 w-6 text-purple-600 mr-3" />
+            <h2 className="text-heading-3 text-foreground mb-4 flex items-center">
+              <div className="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center mr-4 text-brand-orange shrink-0">
+                <Mail className="h-5 w-5" />
+              </div>
               Information We Collect
             </h2>
-            <div className="space-y-4 text-gray-700">
-              <div>
-                <h3 className="font-semibold mb-2">Personal Information</h3>
-                <ul className="list-disc list-inside space-y-1 ml-4">
+            <div className="space-y-6 pl-14">
+              <div className="bg-gray-50 p-6 rounded-2xl border-2 border-gray-100">
+                <h3 className="font-heading font-bold text-lg mb-2 text-gray-900">Personal Information</h3>
+                <ul className="list-disc list-inside space-y-1 text-gray-600 font-medium">
                   <li>Name and contact details (email, phone number)</li>
                   <li>Shipping and billing addresses</li>
                   <li>Account credentials (username, password)</li>
                   <li>Payment information (processed securely through Razorpay)</li>
                 </ul>
               </div>
-              <div>
-                <h3 className="font-semibold mb-2">Order Information</h3>
-                <ul className="list-disc list-inside space-y-1 ml-4">
-                  <li>Product selections and customizations</li>
-                  <li>Order history and status</li>
-                  <li>Custom images uploaded for personalization</li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="font-semibold mb-2">Technical Information</h3>
-                <ul className="list-disc list-inside space-y-1 ml-4">
-                  <li>IP address and browser type</li>
-                  <li>Device information and operating system</li>
-                  <li>Pages visited and time spent on our site</li>
-                </ul>
-              </div>
             </div>
           </section>
 
-          {/* How We Use Your Information */}
           <section>
-            <h2 className="text-xl md:text-2xl font-semibold mb-4 flex items-center">
-              <Lock className="h-6 w-6 text-purple-600 mr-3" />
+            <h2 className="text-heading-3 text-foreground mb-4 flex items-center">
+              <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center mr-4 text-brand-purple shrink-0">
+                <Lock className="h-5 w-5" />
+              </div>
               How We Use Your Information
             </h2>
-            <p className="text-gray-700 mb-4">We use your information for the following purposes:</p>
-            <ul className="list-disc list-inside space-y-2 text-gray-700 ml-4">
+            <p className="text-gray-600 font-medium leading-relaxed pl-14 mb-4">We use your information for the following purposes:</p>
+            <ul className="list-disc list-inside space-y-2 text-gray-600 font-medium pl-14">
               <li>To process and fulfill your orders</li>
               <li>To communicate with you about your orders and shipments</li>
               <li>To provide customer support and respond to your inquiries</li>
               <li>To improve our products, services, and website functionality</li>
-              <li>To send promotional communications (with your consent)</li>
-              <li>To comply with legal obligations and protect our rights</li>
             </ul>
           </section>
 
-          {/* Data Security */}
-          <section>
-            <h2 className="text-xl md:text-2xl font-semibold mb-4 flex items-center">
-              <Shield className="h-6 w-6 text-purple-600 mr-3" />
-              Data Security
-            </h2>
-            <p className="text-gray-700 leading-relaxed">
-              We implement appropriate technical and organizational measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction. This includes:
-            </p>
-            <ul className="list-disc list-inside space-y-2 text-gray-700 mt-4 ml-4">
-              <li>SSL/TLS encryption for all data transmissions</li>
-              <li>Secure payment processing through Razorpay</li>
-              <li>Regular security audits and updates</li>
-              <li>Restricted access to personal data</li>
-            </ul>
-          </section>
-
-          {/* Information Sharing */}
-          <section>
-            <h2 className="text-xl md:text-2xl font-semibold mb-4">Information Sharing</h2>
-            <p className="text-gray-700 mb-4">We do not sell your personal information. We may share your information only in the following circumstances:</p>
-            <ul className="list-disc list-inside space-y-2 text-gray-700 ml-4">
-              <li>With service providers who assist in operating our business (e.g., payment processors, shipping carriers)</li>
-              <li>When required by law or to protect our rights and safety</li>
-              <li>With your consent for specific purposes</li>
-              <li>In connection with a business transfer or merger</li>
-            </ul>
-          </section>
-
-          {/* Your Rights */}
-          <section>
-            <h2 className="text-xl md:text-2xl font-semibold mb-4">Your Rights</h2>
-            <p className="text-gray-700 mb-4">You have the right to:</p>
-            <ul className="list-disc list-inside space-y-2 text-gray-700 ml-4">
-              <li>Access and review your personal information</li>
-              <li>Request correction of inaccurate information</li>
-              <li>Request deletion of your personal information</li>
-              <li>Opt-out of marketing communications</li>
-              <li>Object to processing of your personal information</li>
-            </ul>
-            <p className="text-gray-700 mt-4">
-              To exercise these rights, please contact us at privacy@oduxart.com
-            </p>
-          </section>
-
-          {/* Cookies */}
-          <section>
-            <h2 className="text-xl md:text-2xl font-semibold mb-4">Cookies and Tracking</h2>
-            <p className="text-gray-700 leading-relaxed">
-              We use cookies and similar technologies to enhance your browsing experience, analyze site traffic, and personalize content. You can control cookie settings through your browser preferences.
-            </p>
-          </section>
-
-          {/* Children's Privacy */}
-          <section>
-            <h2 className="text-xl md:text-2xl font-semibold mb-4">Children's Privacy</h2>
-            <p className="text-gray-700 leading-relaxed">
-              Our services are not intended for children under 13 years of age. We do not knowingly collect personal information from children. If we become aware of such collection, we will take steps to delete it.
-            </p>
-          </section>
-
-          {/* Changes to Policy */}
-          <section>
-            <h2 className="text-xl md:text-2xl font-semibold mb-4">Changes to This Policy</h2>
-            <p className="text-gray-700 leading-relaxed">
-              We may update this Privacy Policy from time to time. We will notify you of any material changes by posting the new policy on our website and updating the "Last updated" date.
-            </p>
-          </section>
-
-          {/* Contact */}
-          <section className="border-t pt-8">
-            <h2 className="text-xl md:text-2xl font-semibold mb-4">Contact Us</h2>
-            <p className="text-gray-700 mb-4">
-              If you have any questions about this Privacy Policy or our data practices, please contact us:
-            </p>
-            <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-              <p className="text-gray-700">
-                <strong>Email:</strong> privacy@oduxart.com
-              </p>
-              <p className="text-gray-700">
-                <strong>Address:</strong> [Your Business Address]
-              </p>
+          <section className="pt-8 border-t-2 border-gray-100">
+            <h2 className="text-heading-3 text-foreground mb-6">Contact Us</h2>
+            <div className="bg-gradient-to-br from-brand-pink to-[#ff0f7b] rounded-3xl p-8 text-white">
+              <p className="mb-6 font-bold text-white/80">If you have any questions about this Privacy Policy, please contact us:</p>
+              <div className="space-y-3 font-medium">
+                <p><strong>Email:</strong> privacy@oduxart.com</p>
+                <p><strong>Address:</strong> Odux Art Studio, New Delhi, India</p>
+              </div>
             </div>
           </section>
-        </div>
+
+        </motion.div>
       </div>
     </div>
   )

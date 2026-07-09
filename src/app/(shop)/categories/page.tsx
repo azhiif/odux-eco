@@ -4,7 +4,10 @@ import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { db } from '@/lib/firebase'
-import { collection, query, where, orderBy, getDocs } from 'firebase/firestore'
+import { collection, query, where, getDocs } from 'firebase/firestore'
+import { motion } from 'framer-motion'
+import { Sparkles, ArrowRight, Grid3X3, MessageCircle, Mail } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 interface Category {
   id: string
@@ -13,6 +16,16 @@ interface Category {
   slug: string
   image_url?: string
   product_count?: number
+}
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.1 } }
+}
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20, scale: 0.95 },
+  show: { opacity: 1, y: 0, scale: 1 }
 }
 
 export default function CategoriesPage() {
@@ -25,32 +38,13 @@ export default function CategoriesPage() {
 
   const fetchCategories = async () => {
     try {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Fetching categories...')
-      }
-      const categoriesQ = query(
-        collection(db, 'categories'),
-        where('is_active', '==', true)
-      )
+      const categoriesQ = query(collection(db, 'categories'), where('is_active', '==', true))
       const categoriesSnap = await getDocs(categoriesQ)
-      const categoriesList = categoriesSnap.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as Category))
-      console.log('Categories loaded:', categoriesList.length)
+      const categoriesList = categoriesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Category))
 
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Fetching all active products for counting...')
-      }
-      const productsQ = query(
-        collection(db, 'products'),
-        where('is_active', '==', true)
-      )
+      const productsQ = query(collection(db, 'products'), where('is_active', '==', true))
       const productsSnap = await getDocs(productsQ)
       const allProducts = productsSnap.docs.map(doc => doc.data())
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Total active products loaded:', allProducts.length)
-      }
 
       const categoriesData = categoriesList.map(cat => {
         const matchingProducts = allProducts.filter(p => {
@@ -58,25 +52,13 @@ export default function CategoriesPage() {
           const catId = String(cat.id || '').trim().toLowerCase()
           return pCatId === catId
         })
-        const count = matchingProducts.length
-        console.log(`Matching for ${cat.name} (${cat.id}): found ${count} products`)
-        return {
-          ...cat,
-          product_count: count
-        }
+        return { ...cat, product_count: matchingProducts.length }
       })
       
-      // Sort by name
       categoriesData.sort((a, b) => a.name.localeCompare(b.name))
-      
       setCategories(categoriesData)
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Categories with counts:', categoriesData.map(c => `${c.name}: ${c.product_count}`).join(', '))
-      }
     } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Error fetching categories:', error)
-      }
+      console.error('Error fetching categories:', error)
     } finally {
       setLoading(false)
     }
@@ -84,117 +66,110 @@ export default function CategoriesPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-center items-center min-h-[400px]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading categories...</p>
-          </div>
+      <div className="flex justify-center items-center min-h-screen bg-background">
+        <div className="text-center">
+          <motion.div 
+            animate={{ rotate: 360, scale: [1, 1.2, 1] }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+            className="w-16 h-16 border-4 border-t-brand-pink border-r-brand-orange border-b-brand-purple border-l-brand-blue rounded-full mx-auto mb-6"
+          />
+          <p className="text-brand-purple font-heading text-xl animate-pulse">Loading Magic Categories...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold mb-4">Shop by Category</h1>
-        <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-          Find the perfect gift for every occasion. Browse our categories to discover personalized art pieces that capture your special moments.
-        </p>
-      </div>
+    <div className="min-h-screen bg-background pb-16 pt-6 relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-pink/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none z-0" />
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-brand-orange/10 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3 pointer-events-none z-0" />
 
-      {/* Categories Grid */}
-      {categories.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-gray-600 text-lg">No categories available at the moment.</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          {categories.map((category) => (
-            <Link key={category.id} href={`/categories/${category.slug}`}>
-              <div className="group cursor-pointer">
-                <div className="relative overflow-hidden rounded-lg bg-gray-100 aspect-square mb-4">
-                  {category.image_url ? (
-                    <Image
-                      src={category.image_url}
-                      alt={category.name}
-                      fill
-                      className="object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
-                  ) : (
-                    <div className="flex items-center justify-center h-full">
-                      <div className="text-center">
-                        <div className="w-20 h-20 bg-gray-300 rounded-full mx-auto mb-2 flex items-center justify-center">
-                          <span className="text-2xl text-gray-500">
-                            {category.name.charAt(0)}
-                          </span>
-                        </div>
-                        <span className="text-gray-500">{category.name}</span>
+      <div className="container-premium relative z-10">
+        {/* Header */}
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-12 md:mb-16">
+          <div className="inline-flex items-center px-4 py-2 bg-pink-50 rounded-full mb-4 border-2 border-pink-100">
+            <Sparkles className="h-5 w-5 text-brand-pink mr-2" />
+            <span className="text-brand-purple font-bold tracking-wide">Find the Perfect Gift</span>
+          </div>
+          <h1 className="text-display text-foreground mb-4">Shop by <span className="text-brand-orange">Category</span></h1>
+          <p className="text-body-large text-gray-500 max-w-2xl mx-auto">
+            Browse our magical collections to discover personalized art pieces that capture your special moments.
+          </p>
+        </motion.div>
+
+        {/* Categories Grid */}
+        {categories.length === 0 ? (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-20 bg-white rounded-[3rem] shadow-sm border-2 border-dashed border-gray-200 max-w-2xl mx-auto">
+            <div className="w-24 h-24 bg-pink-50 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Grid3X3 className="w-10 h-10 text-brand-pink opacity-50" />
+            </div>
+            <h3 className="text-heading-3 text-foreground mb-2">No categories yet</h3>
+            <p className="text-muted-foreground mb-6">We're brewing some new magic in the back. Check back soon!</p>
+          </motion.div>
+        ) : (
+          <motion.div variants={containerVariants} initial="hidden" animate="show" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 mb-16">
+            {categories.map((category) => (
+              <motion.div key={category.id} variants={itemVariants} className="h-full">
+                <Link href={`/categories/${category.slug}`} className="block group h-full">
+                  <div className="premium-card bg-white p-6 md:p-8 flex flex-col items-center justify-center text-center h-full hover:-translate-y-2 transition-all duration-300 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-pink-50 to-transparent rounded-bl-full z-0 group-hover:scale-110 transition-transform"></div>
+                    
+                    <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-pink-50 mb-6 flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-inner relative overflow-hidden z-10 border-4 border-white shadow-lg">
+                      {category.image_url ? (
+                        <Image src={category.image_url} alt={category.name} fill className="object-cover" />
+                      ) : (
+                        <span className="text-4xl font-bold text-brand-pink opacity-50">{category.name.charAt(0)}</span>
+                      )}
+                    </div>
+                    
+                    <h3 className="text-heading-3 text-foreground mb-2 group-hover:text-brand-pink transition-colors z-10">
+                      {category.name}
+                    </h3>
+                    <p className="text-body-small text-gray-500 mb-4 line-clamp-2 z-10">
+                      {category.description}
+                    </p>
+                    
+                    <div className="mt-auto pt-4 flex items-center justify-between w-full border-t border-gray-100 z-10">
+                      <span className="text-sm font-bold text-brand-purple bg-purple-50 px-3 py-1 rounded-full">
+                        {category.product_count} {category.product_count === 1 ? 'item' : 'items'}
+                      </span>
+                      <div className="w-8 h-8 rounded-full bg-brand-pink text-white flex items-center justify-center opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all">
+                        <ArrowRight className="w-4 h-4" />
                       </div>
                     </div>
-                  )}
-                  
-                  {/* Overlay */}
-                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
-                    <div className="bg-white text-black px-4 py-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform translate-y-4 group-hover:translate-y-0">
-                      Shop Now
-                    </div>
                   </div>
-                </div>
-                
-                <div className="text-center">
-                  <h3 className="text-xl font-semibold mb-2 group-hover:text-black transition-colors">
-                    {category.name}
-                  </h3>
-                  <p className="text-gray-600 text-sm mb-2 line-clamp-2">
-                    {category.description}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {category.product_count} {category.product_count === 1 ? 'product' : 'products'}
-                  </p>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
+                </Link>
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
 
-      {/* Featured Categories */}
-      <div className="mt-16">
-        <h2 className="text-2xl font-bold text-center mb-8">Popular Categories</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {categories.slice(0, 4).map((category) => (
-            <Link key={category.id} href={`/categories/${category.slug}`}>
-              <div className="bg-gray-50 rounded-lg p-4 text-center hover:bg-gray-100 transition-colors">
-                <h4 className="font-medium mb-1">{category.name}</h4>
-                <p className="text-sm text-gray-600">{category.product_count} items</p>
-              </div>
+        {/* Help Section */}
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          className="bg-gradient-to-br from-brand-purple to-[#312e81] rounded-[3rem] p-8 md:p-12 text-center shadow-2xl relative overflow-hidden"
+        >
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl mix-blend-overlay"></div>
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-brand-pink opacity-20 rounded-full blur-3xl mix-blend-overlay"></div>
+          
+          <h2 className="text-heading-2 text-white mb-4 relative z-10">Need Help Choosing?</h2>
+          <p className="text-white/80 mb-8 max-w-2xl mx-auto relative z-10 text-lg">
+            Not sure which category to explore? Contact our team for personalized recommendations based on your occasion and preferences.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
+            <a
+              href="https://wa.me/9072270271"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-green-500 text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-green-600 hover:scale-105 transition-all shadow-lg flex items-center justify-center"
+            >
+              <MessageCircle className="w-5 h-5 mr-2" /> WhatsApp Us
+            </a>
+            <Link href="/contact" className="bg-white text-brand-purple px-8 py-4 rounded-full font-bold text-lg hover:bg-gray-50 hover:scale-105 transition-all shadow-lg flex items-center justify-center">
+              <Mail className="w-5 h-5 mr-2" /> Contact Form
             </Link>
-          ))}
-        </div>
-      </div>
-
-      {/* Help Section */}
-      <div className="mt-16 bg-gray-50 rounded-lg p-8 text-center">
-        <h2 className="text-2xl font-bold mb-4">Need Help Choosing?</h2>
-        <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
-          Not sure which category to explore? Contact our team for personalized recommendations based on your occasion and preferences.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <a
-            href="https://wa.me/9072270271"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-green-500 text-white px-6 py-3 rounded-full hover:bg-green-600 transition-colors inline-flex items-center justify-center"
-          >
-            WhatsApp Us
-          </a>
-          <Link href="/contact" className="bg-black text-white px-6 py-3 rounded-full hover:bg-gray-800 transition-colors inline-flex items-center justify-center">
-            Contact Form
-          </Link>
-        </div>
+          </div>
+        </motion.div>
       </div>
     </div>
   )

@@ -1,15 +1,11 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import Link from 'next/link'
-import { auth, db } from '@/lib/firebase'
-import { collection, query, where, getDocs, doc, updateDoc, getDoc } from 'firebase/firestore'
-import { Shield, UserPlus, UserMinus, Crown, Loader2, Search, Mail, Check, X, ArrowLeft } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
-import { getAllSuperAdmins, makeUserSuperAdmin, removeSuperAdminRole, getUserProfile } from '@/lib/roles'
+import { db } from '@/lib/firebase'
+import { collection, query, where, getDocs } from 'firebase/firestore'
+import { Shield, UserPlus, UserMinus, Crown, Loader2, Search, Mail } from 'lucide-react'
+import { getAllSuperAdmins, makeUserSuperAdmin, removeSuperAdminRole } from '@/lib/roles'
+import { motion } from 'framer-motion'
 
 interface UserProfile {
   uid: string
@@ -40,9 +36,7 @@ export default function SuperAdminPage() {
       const usersData = snapshot.docs.map(doc => doc.data() as UserProfile)
       setUsers(usersData)
     } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Error fetching users:', error)
-      }
+      console.error('Error fetching users:', error)
     } finally {
       setLoading(false)
     }
@@ -60,9 +54,6 @@ export default function SuperAdminPage() {
       await fetchSuperAdmins()
       await fetchUsers()
     } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Error making superadmin:', error)
-      }
       alert('Error making user superadmin')
     } finally {
       setActionLoading(null)
@@ -78,9 +69,6 @@ export default function SuperAdminPage() {
       await fetchSuperAdmins()
       await fetchUsers()
     } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Error removing superadmin:', error)
-      }
       alert('Error removing superadmin role')
     } finally {
       setActionLoading(null)
@@ -94,146 +82,133 @@ export default function SuperAdminPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-brand-purple" />
       </div>
     )
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="space-y-8 pb-10">
       <div className="mb-8">
-        <Link href="/admin" className="inline-flex items-center text-gray-600 hover:text-blue-600 mb-4">
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Dashboard
-        </Link>
-        <div className="flex items-center gap-3 mb-2">
-          <Crown className="h-8 w-8 text-yellow-500" />
-          <h1 className="text-3xl font-bold">SuperAdmin Management</h1>
-        </div>
-        <p className="text-gray-600">Manage superadmin privileges for admin users</p>
+        <h1 className="text-display text-gray-900 mb-2 flex items-center">
+          <Crown className="h-8 w-8 mr-3 text-brand-orange" />
+          SuperAdmin
+        </h1>
+        <p className="text-gray-500 font-medium">Manage superadmin privileges for admin users</p>
       </div>
 
-      {/* Search */}
-      <div className="mb-6">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-          <Input
-            placeholder="Search users by name or email..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
+      <div className="premium-card bg-orange-50/50 border-2 border-orange-100 p-6 flex items-start gap-4">
+        <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm flex-shrink-0">
+          <Shield className="h-6 w-6 text-brand-orange" />
+        </div>
+        <div>
+          <h3 className="text-lg font-heading font-bold text-gray-900 mb-1">SuperAdmin Privileges</h3>
+          <p className="text-gray-600 font-medium text-sm">
+            SuperAdmins have full access to all administrative features including banner management, post management, and user role management. Grant these privileges carefully.
+          </p>
         </div>
       </div>
 
-      {/* Users List */}
-      <Card>
-        <div className="grid grid-cols-12 gap-4 px-6 py-4 bg-gray-50 border-b border-gray-200 font-semibold text-sm text-gray-600">
-          <div className="col-span-4">User</div>
-          <div className="col-span-3">Email</div>
-          <div className="col-span-2">Admin</div>
-          <div className="col-span-2">SuperAdmin</div>
-          <div className="col-span-1">Actions</div>
+      <div className="premium-card bg-white p-6 flex items-center">
+        <Search className="h-5 w-5 text-gray-400 mr-3" />
+        <input 
+          placeholder="Search admins by name or email..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full bg-transparent border-none outline-none text-gray-700 font-medium"
+        />
+      </div>
+
+      <div className="premium-card bg-white overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-gray-50 border-b-2 border-gray-100">
+                <th className="p-4 font-bold text-sm text-gray-400 uppercase tracking-wider">Admin User</th>
+                <th className="p-4 font-bold text-sm text-gray-400 uppercase tracking-wider">Email</th>
+                <th className="p-4 font-bold text-sm text-gray-400 uppercase tracking-wider">Status</th>
+                <th className="p-4 font-bold text-sm text-gray-400 uppercase tracking-wider text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y-2 divide-gray-50">
+              {filteredUsers.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="px-6 py-12 text-center text-gray-500 font-bold">
+                    No admins found matching your search.
+                  </td>
+                </tr>
+              ) : (
+                filteredUsers.map((user, i) => {
+                  const isSuperAdmin = superAdmins.includes(user.uid);
+                  return (
+                    <motion.tr initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} key={user.uid} className="hover:bg-gray-50/50 transition-colors">
+                      <td className="p-4">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-sm ${isSuperAdmin ? 'bg-gradient-to-br from-brand-orange to-brand-pink' : 'bg-gray-800'}`}>
+                            {user.first_name?.[0] || ''}{user.last_name?.[0] || ''}
+                          </div>
+                          <div>
+                            <div className="font-bold text-gray-900 text-base">
+                              {user.first_name} {user.last_name}
+                            </div>
+                            <div className="text-xs font-bold text-gray-400 font-mono mt-0.5">ID: {user.uid.slice(0, 8)}...</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-2 text-gray-600 font-medium">
+                          <Mail className="h-4 w-4 text-gray-400" />
+                          <span>{user.email}</span>
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex flex-col gap-2 items-start">
+                          <span className="px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-full bg-blue-50 text-brand-blue border border-blue-200">
+                            Admin
+                          </span>
+                          {isSuperAdmin && (
+                            <span className="px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-full bg-orange-50 text-brand-orange border border-orange-200">
+                              SuperAdmin
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="p-4 text-right">
+                        {isSuperAdmin ? (
+                          <button
+                            onClick={() => handleRemoveSuperAdmin(user.uid)}
+                            disabled={actionLoading === user.uid}
+                            className="inline-flex items-center justify-center px-4 py-2 bg-red-50 text-red-500 font-bold rounded-xl hover:bg-red-500 hover:text-white transition-colors text-sm"
+                          >
+                            {actionLoading === user.uid ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <><UserMinus className="h-4 w-4 mr-2" /> Remove</>
+                            )}
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleMakeSuperAdmin(user.uid)}
+                            disabled={actionLoading === user.uid}
+                            className="inline-flex items-center justify-center px-4 py-2 bg-green-50 text-green-600 font-bold rounded-xl hover:bg-green-600 hover:text-white transition-colors text-sm"
+                          >
+                            {actionLoading === user.uid ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <><UserPlus className="h-4 w-4 mr-2" /> Make SuperAdmin</>
+                            )}
+                          </button>
+                        )}
+                      </td>
+                    </motion.tr>
+                  )
+                })
+              )}
+            </tbody>
+          </table>
         </div>
-
-        {filteredUsers.length === 0 ? (
-          <div className="px-6 py-12 text-center text-gray-500">
-            No users found matching your search
-          </div>
-        ) : (
-          filteredUsers.map((user) => (
-            <div
-              key={user.uid}
-              className="grid grid-cols-12 gap-4 px-6 py-4 border-b border-gray-100 hover:bg-gray-50 items-center"
-            >
-              <div className="col-span-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold">
-                    {user.first_name[0]}{user.last_name[0]}
-                  </div>
-                  <div>
-                    <div className="font-medium text-gray-900">
-                      {user.first_name} {user.last_name}
-                    </div>
-                    <div className="text-xs text-gray-500">ID: {user.uid.slice(0, 8)}...</div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="col-span-3">
-                <div className="flex items-center gap-2 text-gray-600">
-                  <Mail className="h-4 w-4" />
-                  <span className="text-sm">{user.email}</span>
-                </div>
-              </div>
-
-              <div className="col-span-2">
-                {user.is_admin ? (
-                  <Badge variant="success">Yes</Badge>
-                ) : (
-                  <Badge variant="secondary">No</Badge>
-                )}
-              </div>
-
-              <div className="col-span-2">
-                {superAdmins.includes(user.uid) ? (
-                  <Badge variant="warning">Yes</Badge>
-                ) : (
-                  <Badge variant="secondary">No</Badge>
-                )}
-              </div>
-
-              <div className="col-span-1">
-                {superAdmins.includes(user.uid) ? (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleRemoveSuperAdmin(user.uid)}
-                    disabled={actionLoading === user.uid}
-                    className="text-red-600"
-                  >
-                    {actionLoading === user.uid ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <UserMinus className="h-4 w-4" />
-                    )}
-                  </Button>
-                ) : (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleMakeSuperAdmin(user.uid)}
-                    disabled={actionLoading === user.uid}
-                    className="text-green-600"
-                  >
-                    {actionLoading === user.uid ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <UserPlus className="h-4 w-4" />
-                    )}
-                  </Button>
-                )}
-              </div>
-            </div>
-          ))
-        )}
-      </Card>
-
-      {/* Info Box */}
-      <Card className="mt-6 bg-blue-50 border-blue-200">
-        <CardContent className="p-4">
-          <div className="flex items-start gap-3">
-            <Shield className="h-5 w-5 text-blue-600 mt-0.5" />
-            <div className="text-sm text-blue-800">
-              <p className="font-medium mb-1">SuperAdmin Privileges</p>
-              <p className="text-xs">
-                SuperAdmins have full access to all administrative features including banner management, post management, and user role management.
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      </div>
     </div>
   )
 }

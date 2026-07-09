@@ -46,10 +46,23 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // Posts - public read published, superadmin write
+    // Posts - public read published, admin write
     match /posts/{postId} {
       allow read: if true;
-      allow write: if isSuperAdmin();
+      allow write: if isAdmin();
+    }
+
+    // Settings
+    match /settings/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Contact Messages
+    match /contact_messages/{messageId} {
+      allow read: if isAdmin();
+      allow create: if true;
+      allow update, delete: if isAdmin();
     }
 
     // Shopping cart - owner only

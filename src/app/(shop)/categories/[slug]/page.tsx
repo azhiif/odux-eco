@@ -6,9 +6,10 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { db } from '@/lib/firebase'
-import { collection, query, where, orderBy, getDocs } from 'firebase/firestore'
+import { collection, query, where, getDocs } from 'firebase/firestore'
 import { formatPrice } from '@/lib/utils'
-import { ShoppingCart, ArrowLeft } from 'lucide-react'
+import { ShoppingBag, ChevronLeft, Star, Camera, Grid3X3, Filter, ChevronDown } from 'lucide-react'
+import { motion } from 'framer-motion'
 
 interface Product {
   id: string
@@ -30,6 +31,16 @@ interface Category {
   image_url?: string
 }
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.1 } }
+}
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20, scale: 0.95 },
+  show: { opacity: 1, y: 0, scale: 1 }
+}
+
 export default function CategoryPage() {
   const params = useParams()
   const slug = params.slug as string
@@ -40,40 +51,24 @@ export default function CategoryPage() {
   const [sortBy, setSortBy] = useState<string>('name')
 
   useEffect(() => {
-    if (slug) {
-      fetchCategory()
-    }
+    if (slug) fetchCategory()
   }, [slug])
 
   useEffect(() => {
-    if (category) {
-      fetchProducts()
-    }
+    if (category) fetchProducts()
   }, [category?.id, sortBy])
 
   const fetchCategory = async () => {
     try {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Fetching category for slug:', slug)
-      }
       const q = query(collection(db, 'categories'), where('slug', '==', slug), where('is_active', '==', true))
       const snapshot = await getDocs(q)
-
       if (!snapshot.empty) {
-        const doc = snapshot.docs[0]
-        const data = { id: doc.id, ...doc.data() } as Category
-        setCategory(data)
-        console.log('Category found:', data.name)
+        setCategory({ id: snapshot.docs[0].id, ...snapshot.docs[0].data() } as Category)
       } else {
-        if (process.env.NODE_ENV === 'development') {
-          console.warn('No active category found for slug:', slug)
-        }
         setCategory(null)
       }
     } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Error fetching category:', error)
-      }
+      console.error('Error fetching category:', error)
     }
   }
 
@@ -81,30 +76,16 @@ export default function CategoryPage() {
     if (!category) return
     setLoading(true)
     try {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Fetching all active products for robust counting/filtering...')
-      }
-      const q = query(
-        collection(db, 'products'),
-        where('is_active', '==', true)
-      )
-
+      const q = query(collection(db, 'products'), where('is_active', '==', true))
       const snapshot = await getDocs(q)
       const allProducts = snapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() as any) } as Product))
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Total active products loaded globally:', allProducts.length)
-      }
 
-      // Filter products for this specific category using robust matching
       const filteredProducts = allProducts.filter(p => {
         const pCatId = String((p as any).category_id || '').trim().toLowerCase()
         const catId = String(category.id || '').trim().toLowerCase()
         return pCatId === catId
       })
 
-      console.log(`Matching for ${category.name} (${category.id}): found ${filteredProducts.length} products`)
-
-      // Apply sorting in memory
       filteredProducts.sort((a, b) => {
         switch (sortBy) {
           case 'price-low': return a.price - b.price
@@ -113,9 +94,7 @@ export default function CategoryPage() {
           default: return a.name.localeCompare(b.name)
         }
       })
-
       setProducts(filteredProducts)
-      console.log('Products loaded for category:', filteredProducts.length)
     } catch (error) {
       console.error('Error fetching products:', error)
     } finally {
@@ -123,19 +102,21 @@ export default function CategoryPage() {
     }
   }
 
-  const handleAddToCart = async (productId: string) => {
-    // This will be implemented when we build the cart functionality
+  const handleAddToCart = async (productId: string, e: React.MouseEvent) => {
+    e.preventDefault()
     console.log('Add to cart:', productId)
   }
 
   if (loading && !category) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-center items-center min-h-[400px]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading category...</p>
-          </div>
+      <div className="flex justify-center items-center min-h-screen bg-background">
+        <div className="text-center">
+          <motion.div 
+            animate={{ rotate: 360, scale: [1, 1.2, 1] }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+            className="w-16 h-16 border-4 border-t-brand-pink border-r-brand-orange border-b-brand-purple border-l-brand-blue rounded-full mx-auto mb-6"
+          />
+          <p className="text-brand-purple font-heading text-xl animate-pulse">Loading category magic...</p>
         </div>
       </div>
     )
@@ -143,183 +124,157 @@ export default function CategoryPage() {
 
   if (!category) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center py-12">
-          <h1 className="text-2xl font-bold mb-4">Category Not Found</h1>
-          <p className="text-gray-600 mb-6">The category you're looking for doesn't exist or has been removed.</p>
-          <Link href="/categories">
-            <Button>Browse All Categories</Button>
-          </Link>
-        </div>
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center text-center px-4">
+        <h1 className="text-display text-foreground mb-4">Category Not Found</h1>
+        <p className="text-body-large text-gray-500 mb-8">This collection has vanished into thin air!</p>
+        <Link href="/categories">
+          <Button className="btn-premium-gold px-10 py-6 text-lg rounded-full shadow-lg">
+            Browse All Categories
+          </Button>
+        </Link>
       </div>
     )
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Breadcrumb */}
-      <nav className="mb-8">
-        <div className="flex items-center space-x-2 text-sm text-gray-600">
-          <Link href="/" className="hover:text-black">Home</Link>
-          <span>/</span>
-          <Link href="/categories" className="hover:text-black">Categories</Link>
-          <span>/</span>
-          <span className="text-black font-medium">{category.name}</span>
-        </div>
-      </nav>
+    <div className="min-h-screen bg-background pb-16 pt-6 relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-pink/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none z-0" />
+      <div className="absolute top-[40%] left-0 w-[500px] h-[500px] bg-brand-purple/10 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3 pointer-events-none z-0" />
 
-      {/* Category Header */}
-      <div className="mb-12">
-        <div className="flex flex-col md:flex-row gap-8 items-center">
-          <div className="flex-1">
-            <div className="flex items-center mb-4">
-              <Link href="/categories">
-                <Button variant="ghost" size="sm" className="mr-4">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Categories
-                </Button>
-              </Link>
+      <div className="container-premium relative z-10">
+        
+        {/* Navigation & Header */}
+        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="mb-6 md:mb-10">
+          <Link href="/categories" className="inline-flex items-center text-gray-600 hover:text-brand-pink group transition-colors">
+            <div className="w-10 h-10 bg-white shadow-sm rounded-full flex items-center justify-center mr-3 group-hover:bg-brand-pink group-hover:text-white transition-all duration-300">
+              <ChevronLeft className="h-5 w-5" />
             </div>
-            <h1 className="text-4xl font-bold mb-4">{category.name}</h1>
-            <p className="text-lg text-gray-600 mb-6">{category.description}</p>
-            <p className="text-gray-500">
-              {products.length} {products.length === 1 ? 'product' : 'products'} available
-            </p>
-          </div>
-          
-          {category.image_url && (
-            <div className="w-full md:w-80 h-80 relative">
-              <Image
-                src={category.image_url}
-                alt={category.name}
-                fill
-                className="object-cover rounded-lg"
-              />
-            </div>
-          )}
-        </div>
-      </div>
+            <span className="font-heading text-lg font-bold">Categories</span>
+          </Link>
+        </motion.div>
 
-      {/* Sort Options */}
-      <div className="flex justify-between items-center mb-8">
-        <h2 className="text-2xl font-semibold">Products</h2>
-        <div className="flex items-center space-x-4">
-          <label className="text-sm text-gray-600">Sort by:</label>
-          <select
-            className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-black"
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-          >
-            <option value="name">Name</option>
-            <option value="price-low">Price: Low to High</option>
-            <option value="price-high">Price: High to Low</option>
-            <option value="newest">Newest First</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Products Grid */}
-      {loading ? (
-        <div className="flex justify-center items-center min-h-[400px]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading products...</p>
-          </div>
-        </div>
-      ) : products.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="mb-8">
-            <div className="w-32 h-32 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center">
-              <span className="text-4xl text-gray-400">
-                {category.name.charAt(0)}
-              </span>
-            </div>
-            <h3 className="text-xl font-semibold mb-2">No products available</h3>
-            <p className="text-gray-600 mb-6">
-              We're working on adding amazing products to this category. Check back soon!
-            </p>
-          </div>
-          <div className="space-y-4">
-            <Link href="/products">
-              <Button>Browse All Products</Button>
-            </Link>
-            <div className="text-gray-500">
-              <p>Need something specific? Contact us:</p>
-              <p>WhatsApp: {process.env.NEXT_PUBLIC_CONTACT_PHONE || '+91 9072270271'}</p>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {products.map((product) => (
-            <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-              <Link href={`/products/${product.id}`}>
-                <div className="relative h-64 bg-gray-200">
-                  {product.image_urls[0] && (
-                    <Image
-                      src={product.image_urls[0]}
-                      alt={product.name}
-                      fill
-                      className="object-cover"
-                    />
-                  )}
-                  {product.featured && (
-                    <div className="absolute top-2 left-2 bg-black text-white px-2 py-1 text-xs rounded">
-                      Featured
-                    </div>
-                  )}
-                  {product.stock_quantity <= 5 && product.stock_quantity > 0 && (
-                    <div className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 text-xs rounded">
-                      Only {product.stock_quantity} left
-                    </div>
-                  )}
-                  {product.stock_quantity === 0 && (
-                    <div className="absolute top-2 right-2 bg-gray-500 text-white px-2 py-1 text-xs rounded">
-                      Out of Stock
-                    </div>
-                  )}
-                </div>
-              </Link>
-              
-              <div className="p-4">
-                <Link href={`/products/${product.id}`}>
-                  <h3 className="text-lg font-semibold mb-2 hover:text-black transition-colors">
-                    {product.name}
-                  </h3>
-                </Link>
-                
-                <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-                  {product.description}
-                </p>
-                
-                {(product.dimensions || product.material) && (
-                  <div className="text-xs text-gray-500 mb-3">
-                    {product.dimensions && <span>Size: {product.dimensions}</span>}
-                    {product.dimensions && product.material && <span> • </span>}
-                    {product.material && <span>Material: {product.material}</span>}
-                  </div>
-                )}
-                
-                <div className="flex items-center justify-between">
-                  <p className="text-xl font-bold text-black">
-                    {formatPrice(product.price)}
-                  </p>
-                  
-                  <Button
-                    size="sm"
-                    onClick={() => handleAddToCart(product.id)}
-                    disabled={product.stock_quantity === 0}
-                    className="bg-black text-white hover:bg-gray-800"
-                  >
-                    <ShoppingCart className="h-4 w-4 mr-1" />
-                    {product.stock_quantity === 0 ? 'Out of Stock' : 'Add to Cart'}
-                  </Button>
-                </div>
+        {/* Category Hero */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-12">
+          <div className="bg-white rounded-[3rem] p-8 md:p-12 shadow-2xl shadow-brand-purple/5 border border-pink-50 flex flex-col md:flex-row gap-8 items-center relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-pink-50 to-transparent rounded-bl-full z-0"></div>
+            
+            <div className="flex-1 relative z-10 text-center md:text-left">
+              <h1 className="text-display text-foreground mb-4">{category.name}</h1>
+              <p className="text-body-large text-gray-600 mb-6 max-w-xl">{category.description}</p>
+              <div className="inline-flex items-center px-4 py-2 bg-purple-50 text-brand-purple rounded-full font-bold">
+                <Grid3X3 className="w-4 h-4 mr-2" /> {products.length} {products.length === 1 ? 'Magical Item' : 'Magical Items'}
               </div>
             </div>
-          ))}
+            
+            {category.image_url && (
+              <div className="w-48 h-48 md:w-64 md:h-64 relative shrink-0 rounded-full overflow-hidden border-8 border-white shadow-xl rotate-3 hover:rotate-0 transition-transform duration-500 z-10">
+                <Image src={category.image_url} alt={category.name} fill className="object-cover" />
+              </div>
+            )}
+          </div>
+        </motion.div>
+
+        {/* Sorting */}
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
+          <h2 className="text-heading-2 text-foreground">Explore Collection</h2>
+          <div className="relative w-full sm:w-auto max-w-xs">
+            <select
+              className="w-full appearance-none px-5 py-3 pr-10 border-2 border-gray-100 rounded-full focus:outline-none focus:border-brand-purple focus:ring-4 focus:ring-brand-purple/10 bg-white text-gray-700 font-bold transition-all shadow-sm"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+            >
+              <option value="name">Sort by Name (A-Z)</option>
+              <option value="price-low">Price: Low to High</option>
+              <option value="price-high">Price: High to Low</option>
+              <option value="newest">Newest Magic</option>
+            </select>
+            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-brand-purple pointer-events-none w-5 h-5" />
+          </div>
         </div>
-      )}
+
+        {/* Products Grid */}
+        {loading ? (
+          <div className="flex justify-center py-20">
+            <div className="w-12 h-12 border-4 border-brand-pink border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : products.length === 0 ? (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-20 bg-white rounded-[3rem] shadow-sm border-2 border-dashed border-gray-200">
+            <div className="w-24 h-24 bg-pink-50 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Camera className="w-10 h-10 text-brand-pink opacity-50" />
+            </div>
+            <h3 className="text-heading-3 text-foreground mb-2">No items yet</h3>
+            <p className="text-muted-foreground mb-6">We're crafting new masterpieces for this category.</p>
+            <Link href="/products">
+              <Button className="btn-premium-gold">Browse All Gifts</Button>
+            </Link>
+          </motion.div>
+        ) : (
+          <motion.div variants={containerVariants} initial="hidden" animate="show" className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
+            {products.map((product) => (
+              <motion.div key={product.id} variants={itemVariants} className="h-full">
+                <Link href={`/products/${product.id}`} className="block group h-full">
+                  <article className="premium-card bg-white h-full flex flex-col group-hover:-translate-y-2 transition-all duration-400 overflow-visible">
+                    <div className="relative aspect-[4/5] overflow-hidden rounded-t-[22px] bg-gray-50">
+                      {product.image_urls[0] ? (
+                        <Image src={product.image_urls[0]} alt={product.name} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Camera className="w-12 h-12 text-brand-pink/30" />
+                        </div>
+                      )}
+                      
+                      {product.featured && (
+                        <div className="absolute top-4 left-4 bg-brand-orange text-white px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg flex items-center z-10">
+                          <Star className="w-3 h-3 mr-1" fill="currentColor" /> Featured
+                        </div>
+                      )}
+                      {product.stock_quantity === 0 && (
+                        <div className="absolute top-4 right-4 bg-gray-800 text-white px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg z-10">
+                          Sold Out
+                        </div>
+                      )}
+
+                      <div className="absolute inset-x-0 bottom-0 p-4 opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 flex justify-center bg-gradient-to-t from-black/50 to-transparent z-20">
+                        <Button 
+                          className="btn-premium-gold w-full max-w-[200px] shadow-2xl"
+                          onClick={(e) => handleAddToCart(product.id, e)}
+                          disabled={product.stock_quantity === 0}
+                        >
+                          <ShoppingBag className="w-4 h-4 mr-2" /> 
+                          {product.stock_quantity === 0 ? 'Out of Stock' : 'Quick Add'}
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <div className="p-5 flex-1 flex flex-col z-10 bg-white rounded-b-[22px]">
+                      <h3 className="text-heading-3 text-foreground mb-2 group-hover:text-brand-pink transition-colors line-clamp-1">
+                        {product.name}
+                      </h3>
+                      
+                      <p className="text-body-small text-muted-foreground mb-4 line-clamp-2 flex-1">
+                        {product.description}
+                      </p>
+                      
+                      <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-100">
+                        <p className="font-heading text-xl font-bold text-foreground">
+                          {formatPrice(product.price)}
+                        </p>
+                        <button 
+                          className="md:hidden w-10 h-10 rounded-full bg-pink-50 text-brand-pink flex items-center justify-center hover:bg-brand-pink hover:text-white transition-colors"
+                          onClick={(e) => handleAddToCart(product.id, e)}
+                          disabled={product.stock_quantity === 0}
+                        >
+                          <ShoppingBag className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+                  </article>
+                </Link>
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+      </div>
     </div>
   )
 }

@@ -12,9 +12,8 @@ export default function Footer() {
               <img 
                 src="https://iili.io/FP5RC4R.png" 
                 alt="Odux Art Logo" 
-                className="h-10 mb-4" 
+                className="h-10 mb-4 brightness-0 opacity-80" 
               />
-              <h3 className="font-heading text-heading-3 text-gray-900 mb-3">Odux Art</h3>
             </div>
             <p className="text-body text-gray-600 mb-6 leading-relaxed">
               Transform your precious moments into timeless art pieces with our custom frames and personalized gifts.

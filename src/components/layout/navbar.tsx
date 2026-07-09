@@ -40,13 +40,13 @@ export default function Navbar() {
   }
 
   return (
-    <nav className={`fixed w-full z-50 top-0 transition-all duration-300 ${isScrolled ? 'bg-black/95 backdrop-blur-md shadow-lg' : 'bg-black shadow-sm'}`}>
-      <div className="container mx-auto px-4 py-3 md:py-4 flex justify-between items-center">
+    <nav className={`fixed w-full z-50 top-0 transition-all duration-300 ${isScrolled ? 'bg-black/95 backdrop-blur-md shadow-lg pt-1' : 'bg-black shadow-sm pt-4 md:pt-6'}`}>
+      <div className="container-premium pb-3 pt-2 md:pt-3 md:pb-4 flex justify-between items-center">
         <Link href="/" className="flex items-center group">
           <img 
             src="https://iili.io/FP5RC4R.png" 
             alt="Odux Art Logo" 
-            className="h-8 md:h-10 transition-transform duration-300 group-hover:scale-105" 
+            className="h-12 md:h-16 transition-transform duration-300 group-hover:scale-105" 
           />
         </Link>
         
@@ -141,7 +141,7 @@ export default function Navbar() {
             : 'max-h-0 opacity-0 overflow-hidden'
         }`}
       >
-        <div className="container mx-auto px-4 py-4 space-y-1">
+        <div className="container-premium py-4 space-y-1">
           <Link 
             href="/" 
             className="block text-white hover:bg-gray-800 py-3 px-4 rounded-lg transition-colors font-medium text-base"
