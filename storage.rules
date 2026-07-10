@@ -27,7 +27,17 @@ service firebase.storage {
       allow write: if isOwner(userId) || isAdmin();
     }
 
+    // Custom orders - anyone can upload images for custom orders
+    match /custom-orders/{allPaths=**} {
+      allow read: if true;
+      allow write: if true;
+    }
+
     // Product images - public read, admin write
+    match /products/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
     match /product_images/{allPaths=**} {
       allow read: if true;
       allow write: if isAdmin();
@@ -46,7 +56,17 @@ service firebase.storage {
     }
 
     // Category images - public read, admin write
+    match /categories/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
     match /category_images/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Posts images - public read, admin write
+    match /posts/{allPaths=**} {
       allow read: if true;
       allow write: if isAdmin();
     }

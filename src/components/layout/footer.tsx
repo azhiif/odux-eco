@@ -59,11 +59,6 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/categories" className="text-body text-gray-600 hover:text-[#C5A46D] transition-colors duration-300">
-                  Categories
-                </Link>
-              </li>
-              <li>
                 <Link href="/custom-order" className="text-body text-gray-600 hover:text-[#C5A46D] transition-colors duration-300">
                   Custom Order
                 </Link>
@@ -71,6 +66,11 @@ export default function Footer() {
               <li>
                 <Link href="/about" className="text-body text-gray-600 hover:text-[#C5A46D] transition-colors duration-300">
                   About Us
+                </Link>
+              </li>
+              <li>
+                <Link href="/contact" className="text-body text-gray-600 hover:text-[#C5A46D] transition-colors duration-300">
+                  Contact Us
                 </Link>
               </li>
             </ul>
@@ -140,18 +140,21 @@ export default function Footer() {
 
         <div className="border-t border-gray-200 mt-12 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <p className="text-body-small text-gray-600">
-              &copy; 2025 Odux Art. All rights reserved.
+            <p className="text-body-small text-gray-600 text-center md:text-left">
+              &copy; {new Date().getFullYear()} Odux Art. All rights reserved.
             </p>
-            <div className="flex space-x-6">
-              <Link href="/privacy" className="text-body-small text-gray-600 hover:text-[#C5A46D] transition-colors duration-300">
+            <div className="flex flex-wrap justify-center md:justify-end gap-x-6 gap-y-2">
+              <Link href="/privacy" className="text-body-small text-gray-600 hover:text-[#C5A46D] transition-colors duration-300 whitespace-nowrap">
                 Privacy Policy
               </Link>
-              <Link href="/terms" className="text-body-small text-gray-600 hover:text-[#C5A46D] transition-colors duration-300">
-                Terms of Service
+              <Link href="/terms" className="text-body-small text-gray-600 hover:text-[#C5A46D] transition-colors duration-300 whitespace-nowrap">
+                Terms & Conditions
               </Link>
-              <Link href="/shipping" className="text-body-small text-gray-600 hover:text-[#C5A46D] transition-colors duration-300">
-                Shipping Info
+              <Link href="/refund" className="text-body-small text-gray-600 hover:text-[#C5A46D] transition-colors duration-300 whitespace-nowrap">
+                Refund & Cancellation
+              </Link>
+              <Link href="/shipping" className="text-body-small text-gray-600 hover:text-[#C5A46D] transition-colors duration-300 whitespace-nowrap">
+                Shipping & Delivery
               </Link>
             </div>
           </div>

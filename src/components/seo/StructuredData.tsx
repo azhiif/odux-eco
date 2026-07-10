@@ -28,6 +28,8 @@ interface ProductData {
   priceCurrency: string
   availability: string
   brand: string
+  sku?: string
+  category?: string
 }
 
 interface FAQData {
@@ -64,11 +66,13 @@ export function ProductStructuredData({ data }: { data: ProductData }) {
     name: data.name,
     description: data.description,
     image: data.image,
+    sku: data.sku,
+    category: data.category,
     offers: {
       '@type': 'Offer',
       price: data.price,
       priceCurrency: data.priceCurrency,
-      availability: data.availability,
+      availability: data.availability === 'InStock' ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
     },
     brand: {
       '@type': 'Brand',
@@ -127,6 +131,35 @@ export function LocalBusinessStructuredData({ data }: { data: OrganizationData }
   return (
     <Script
       id="local-business-structured-data"
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    />
+  )
+}
+
+interface BreadcrumbData {
+  itemListElement: {
+    position: number
+    name: string
+    item: string
+  }[]
+}
+
+export function BreadcrumbStructuredData({ data }: { data: BreadcrumbData }) {
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: data.itemListElement.map(item => ({
+      '@type': 'ListItem',
+      position: item.position,
+      name: item.name,
+      item: item.item,
+    })),
+  }
+
+  return (
+    <Script
+      id="breadcrumb-structured-data"
       type="application/ld+json"
       dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
     />
