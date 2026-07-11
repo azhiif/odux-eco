@@ -26,7 +26,51 @@ export async function getCartItems(): Promise<CartItem[]> {
   const user = auth.currentUser
   
   if (!user) {
-    return []
+    if (typeof window === 'undefined') return []
+    const { getGuestCart } = await import('./guest-cart')
+    const guestCart = getGuestCart()
+    
+    if (guestCart.length === 0) return []
+    
+    const items = await Promise.all(guestCart.map(async (data: any) => {
+      const productSnap = await getDoc(doc(db, 'products', data.product_id))
+      if (!productSnap.exists()) return null
+      
+      return {
+        id: data.id,
+        product_id: data.product_id,
+        quantity: data.quantity,
+        customerUploads: data.customerUploads,
+        variantId: data.variantId,
+        variantSnapshot: data.variantSnapshot,
+        products: { id: productSnap.id, ...productSnap.data() } as any
+      } as CartItem
+    }))
+    
+    return items.filter(Boolean) as CartItem[]
+  }
+  
+  // If user is logged in, check if there's a guest cart to migrate
+  if (typeof window !== 'undefined') {
+    const { getGuestCart, clearGuestCart } = await import('./guest-cart')
+    const guestCart = getGuestCart()
+    if (guestCart.length > 0) {
+      const batch = writeBatch(db)
+      guestCart.forEach((item: any) => {
+        const newRef = doc(collection(db, 'shopping_cart'))
+        const cartData = {
+          user_id: user.uid,
+          product_id: item.product_id,
+          quantity: item.quantity,
+          customerUploads: item.customerUploads || [],
+          variantId: item.variantId || null,
+          variantSnapshot: item.variantSnapshot || null
+        }
+        batch.set(newRef, cartData)
+      })
+      await batch.commit()
+      clearGuestCart()
+    }
   }
 
   const q = query(collection(db, 'shopping_cart'), where('user_id', '==', user.uid))
@@ -57,7 +101,31 @@ export async function addToCart(productId: string, quantity: number = 1, custome
   const user = auth.currentUser
   
   if (!user) {
-    throw new Error('Please login to add items to cart')
+    if (typeof window === 'undefined') return { id: '' }
+    const { getGuestCart, saveGuestCart } = await import('./guest-cart')
+    const guestCart = getGuestCart()
+    
+    // Check if item already exists
+    const existingIndex = guestCart.findIndex((item: any) => item.product_id === productId)
+    
+    if (existingIndex >= 0) {
+      guestCart[existingIndex].quantity += quantity
+      if (customerUploads) {
+        guestCart[existingIndex].customerUploads = customerUploads
+      }
+      saveGuestCart(guestCart)
+      return { id: guestCart[existingIndex].id }
+    } else {
+      const newItem = {
+        id: `guest_${Date.now()}`,
+        product_id: productId,
+        quantity,
+        customerUploads: customerUploads || []
+      }
+      guestCart.push(newItem)
+      saveGuestCart(guestCart)
+      return { id: newItem.id }
+    }
   }
 
   // Check if item already exists in cart to update quantity instead
@@ -86,7 +154,17 @@ export async function updateCartItem(cartItemId: string, quantity: number) {
   const user = auth.currentUser
   
   if (!user) {
-    throw new Error('Please login to update cart')
+    if (typeof window === 'undefined') return
+    if (quantity <= 0) return removeFromCart(cartItemId)
+    
+    const { getGuestCart, saveGuestCart } = await import('./guest-cart')
+    const guestCart = getGuestCart()
+    const index = guestCart.findIndex((item: any) => item.id === cartItemId)
+    if (index >= 0) {
+      guestCart[index].quantity = quantity
+      saveGuestCart(guestCart)
+    }
+    return
   }
 
   if (quantity <= 0) {
@@ -100,7 +178,12 @@ export async function removeFromCart(cartItemId: string) {
   const user = auth.currentUser
   
   if (!user) {
-    throw new Error('Please login to remove items from cart')
+    if (typeof window === 'undefined') return
+    const { getGuestCart, saveGuestCart } = await import('./guest-cart')
+    const guestCart = getGuestCart()
+    const filteredCart = guestCart.filter((item: any) => item.id !== cartItemId)
+    saveGuestCart(filteredCart)
+    return
   }
 
   await deleteDoc(doc(db, 'shopping_cart', cartItemId))
@@ -110,7 +193,10 @@ export async function clearCart() {
   const user = auth.currentUser
   
   if (!user) {
-    throw new Error('Please login to clear cart')
+    if (typeof window === 'undefined') return
+    const { clearGuestCart } = await import('./guest-cart')
+    clearGuestCart()
+    return
   }
 
   const q = query(collection(db, 'shopping_cart'), where('user_id', '==', user.uid))

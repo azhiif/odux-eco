@@ -114,7 +114,7 @@ export default function CategoryClient({ category, initialProducts }: CategoryCl
           {products.map((product) => (
             <motion.div key={product.id} variants={itemVariants} className="h-full">
               <Link href={`/products/${product.id}`} className="block group h-full">
-                <article className="premium-card bg-white h-full flex flex-col group-hover:-translate-y-2 transition-all duration-400 overflow-visible">
+                <article className="premium-card bg-white h-full flex flex-col group-hover:-translate-y-2 group-hover:shadow-2xl transition-all duration-300 border border-transparent group-hover:border-gray-100 overflow-visible">
                   <div className="relative aspect-[4/5] overflow-hidden rounded-t-[22px] bg-gray-50">
                     {product.image_urls?.[0] ? (
                       <Image src={product.image_urls[0]} alt={product.name} fill sizes="(max-width: 640px) 50vw, 25vw" className="object-cover transition-transform duration-700 group-hover:scale-110" />
@@ -148,7 +148,7 @@ export default function CategoryClient({ category, initialProducts }: CategoryCl
                   </div>
                   
                   <div className="p-5 flex-1 flex flex-col z-10 bg-white rounded-b-[22px]">
-                    <h3 className="text-heading-3 text-foreground mb-2 group-hover:text-brand-pink transition-colors line-clamp-1">
+                    <h3 className="text-heading-3 text-foreground mb-2 group-hover:text-brand-pink transition-colors line-clamp-2 capitalize">
                       {product.name}
                     </h3>
                     

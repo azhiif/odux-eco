@@ -190,7 +190,7 @@ export default function AdminInstagramPage() {
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {posts.map((post, idx) => (
                 <div key={idx} className="relative group rounded-2xl overflow-hidden aspect-square border-2 border-gray-100 bg-gray-50">
-                  <Image src={post.imageUrl} alt="Instagram" fill unoptimized className="object-cover" />
+                  <Image src={post.imageUrl} alt="Instagram" fill className="object-cover" sizes="20vw" />
                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-4">
                     <button
                       onClick={() => setPosts(posts.filter((_, i) => i !== idx))}

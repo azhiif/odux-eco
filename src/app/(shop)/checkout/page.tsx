@@ -179,10 +179,7 @@ export default function CheckoutPage() {
     let orderRef: any = null
     try {
       const user = auth.currentUser
-      if (!user) {
-        router.push('/auth/login')
-        return
-      }
+      // Guest checkout is allowed, so we don't return if !user
 
       for (const item of cartItems) {
         if (item.quantity > item.products.stock_quantity) {
@@ -203,7 +200,7 @@ export default function CheckoutPage() {
       }, 0)
 
       orderRef = await addDoc(collection(db, 'orders'), {
-        user_id: user.uid,
+        user_id: user ? user.uid : 'guest',
         status: 'pending',
         payment_status: 'pending',
         total_amount: totalAmount,

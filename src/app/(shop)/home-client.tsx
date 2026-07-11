@@ -104,7 +104,6 @@ export default function HomeClient({ categories, featuredProducts, banners }: Ho
                       alt={banners[currentSlide].title}
                       fill
                       priority
-                      unoptimized
                       sizes="100vw"
                       className="md:hidden object-cover"
                     />
@@ -114,7 +113,6 @@ export default function HomeClient({ categories, featuredProducts, banners }: Ho
                       alt={banners[currentSlide].title}
                       fill
                       priority
-                      unoptimized
                       sizes="100vw"
                       className="hidden md:block object-cover"
                     />
@@ -126,6 +124,7 @@ export default function HomeClient({ categories, featuredProducts, banners }: Ho
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ delay: 0.3 }}
                         className="text-white text-3xl md:text-heading-1 mb-2 drop-shadow-lg"
+                        style={{ textShadow: '0 4px 20px rgba(0,0,0,0.5)' }}
                       >
                         {banners[currentSlide].title}
                       </motion.h2>
@@ -135,6 +134,7 @@ export default function HomeClient({ categories, featuredProducts, banners }: Ho
                           animate={{ y: 0, opacity: 1 }}
                           transition={{ delay: 0.4 }}
                           className="hidden md:block text-white/90 text-sm md:text-body-large mb-4 md:mb-6 max-w-2xl drop-shadow-md line-clamp-2 md:line-clamp-none"
+                          style={{ textShadow: '0 2px 10px rgba(0,0,0,0.4)' }}
                         >
                           {banners[currentSlide].subtitle}
                         </motion.p>
@@ -199,7 +199,7 @@ export default function HomeClient({ categories, featuredProducts, banners }: Ho
                   <div className="premium-card p-6 md:p-8 text-center bg-white hover:bg-brand-pink/5 flex flex-col items-center justify-center h-full">
                     <div className="w-20 h-20 md:w-28 md:h-28 rounded-full bg-pink-50 mb-6 flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300 overflow-hidden shadow-inner relative">
                       {category.image_url ? (
-                        <Image src={category.image_url} alt={category.name} fill unoptimized className="object-cover" sizes="(max-width: 768px) 5rem, 7rem" />
+                        <Image src={category.image_url} alt={category.name} fill className="object-cover" sizes="(max-width: 768px) 5rem, 7rem" />
                       ) : (
                         <Gift className="w-10 h-10 md:w-12 md:h-12 text-brand-pink relative z-10" />
                       )}
@@ -253,7 +253,7 @@ export default function HomeClient({ categories, featuredProducts, banners }: Ho
             {featuredProducts.map((product) => (
               <motion.div key={product.id} variants={itemVariants}>
                 <Link href={`/products/${product.id}`} className="block group">
-                  <article className="premium-card bg-white h-full flex flex-col group-hover:-translate-y-2 transition-all duration-300">
+                  <article className="premium-card bg-white h-full flex flex-col group-hover:-translate-y-2 group-hover:shadow-2xl transition-all duration-300 border border-transparent group-hover:border-gray-100">
                     <div className="relative aspect-[4/5] overflow-hidden rounded-t-[22px]">
                       {product.image_urls[0] ? (
                         <Image
@@ -285,7 +285,7 @@ export default function HomeClient({ categories, featuredProducts, banners }: Ho
                     </div>
                     
                     <div className="p-5 flex-1 flex flex-col">
-                      <h3 className="text-heading-3 text-foreground mb-2 group-hover:text-brand-pink transition-colors line-clamp-1">
+                      <h3 className="text-heading-3 text-foreground mb-2 group-hover:text-brand-pink transition-colors line-clamp-2 capitalize">
                         {product.name}
                       </h3>
                       <p className="text-body-small text-muted-foreground mb-4 line-clamp-2 flex-1">
@@ -399,7 +399,7 @@ export default function HomeClient({ categories, featuredProducts, banners }: Ho
                   key={idx}
                   className="relative aspect-square group block overflow-hidden bg-gray-100"
                 >
-                  <Image src={post.imageUrl} alt="Instagram Post" fill unoptimized className="object-cover transition-transform duration-700 group-hover:scale-110" />
+                  <Image src={post.imageUrl} alt="Instagram Post" fill className="object-cover transition-transform duration-700 group-hover:scale-110" sizes="(max-width: 768px) 50vw, 33vw" />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                     <Instagram className="text-white w-8 h-8 md:w-10 md:h-10 opacity-0 group-hover:opacity-100 transform scale-50 group-hover:scale-100 transition-all duration-300" />
                   </div>

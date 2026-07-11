@@ -16,9 +16,27 @@ export default function Navbar() {
   React.useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       if (user) {
-        const profileSnap = await getDoc(doc(db, 'user_profiles', user.uid))
-        if (profileSnap.exists() && profileSnap.data()?.is_admin) {
-          (user as any).user_metadata = { is_admin: true }
+        const { updateDoc } = await import('firebase/firestore')
+        const profileRef = doc(db, 'user_profiles', user.uid)
+        const profileSnap = await getDoc(profileRef)
+        if (profileSnap.exists()) {
+          const data = profileSnap.data()
+          if (data?.is_admin) {
+            (user as any).user_metadata = { is_admin: true }
+          }
+          
+          // Update last_login if missing or older than 24 hours
+          const now = Date.now()
+          const lastLogin = data?.last_login ? new Date(data.last_login).getTime() : 0
+          if (now - lastLogin > 24 * 60 * 60 * 1000) {
+            try {
+              await updateDoc(profileRef, {
+                last_login: new Date().toISOString()
+              })
+            } catch (e) {
+              console.error('Failed to update last_login', e)
+            }
+          }
         }
       }
       setUser(user)

@@ -96,19 +96,12 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
     setUploading(true)
     try {
       const user = auth.currentUser
-      if (!user) {
-        setModalState({
-          isOpen: true,
-          title: 'Authentication Required',
-          message: 'Please sign in to upload images.',
-          type: 'info'
-        })
-        return
-      }
-
       const uploadPromises = validFiles.map(async (file) => {
         const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}_${file.name}`
-        const storageRef = ref(storage, `customerUploads/${user.uid}/${fileName}`)
+        const storagePath = user 
+          ? `custom_images/${user.uid}/${fileName}`
+          : `custom-orders/guest_${Date.now()}/${fileName}`
+        const storageRef = ref(storage, storagePath)
         await uploadBytes(storageRef, file)
         return await getDownloadURL(storageRef)
       })
@@ -131,18 +124,7 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
   const addToCart = async () => {
     try {
       const user = auth.currentUser
-      if (!user) {
-        setModalState({
-          isOpen: true,
-          title: 'Authentication Required',
-          message: 'Please sign in to add items to cart.',
-          type: 'info'
-        })
-        return
-      }
-
-      await addDoc(collection(db, 'shopping_cart'), {
-        user_id: user.uid,
+      const cartItemData = {
         product_id: product.id,
         quantity: quantity,
         customerUploads: uploadedImages,
@@ -153,7 +135,19 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
           price: selectedVariant.price,
           image: selectedVariant.images?.[0] || ''
         } : null
-      })
+      }
+
+      if (!user) {
+        const { getGuestCart, saveGuestCart } = await import('@/lib/guest-cart')
+        const guestCart = getGuestCart()
+        guestCart.push({ ...cartItemData, id: `guest_${Date.now()}` })
+        saveGuestCart(guestCart)
+      } else {
+        await addDoc(collection(db, 'shopping_cart'), {
+          user_id: user.uid,
+          ...cartItemData
+        })
+      }
 
       try {
         fetch('/api/notify', {

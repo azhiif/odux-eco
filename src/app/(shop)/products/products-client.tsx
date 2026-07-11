@@ -171,7 +171,7 @@ export default function ProductsClient({ initialProducts, categories }: Products
               {currentProducts.map((product) => (
                 <motion.div key={product.id} variants={itemVariants} className="h-full">
                   <Link href={`/products/${product.id}`} className="block group h-full">
-                    <article className="premium-card bg-white h-full flex flex-col group-hover:-translate-y-2 transition-all duration-400 overflow-visible">
+                    <article className="premium-card bg-white h-full flex flex-col group-hover:-translate-y-2 group-hover:shadow-2xl transition-all duration-300 border border-transparent group-hover:border-gray-100 overflow-visible">
                       <div className="relative aspect-[4/5] overflow-hidden rounded-t-[22px] bg-gray-50">
                         {product.image_urls?.[0] ? (
                           <Image
@@ -226,7 +226,7 @@ export default function ProductsClient({ initialProducts, categories }: Products
                           )}
                         </div>
                         
-                        <h3 className="text-heading-3 text-foreground mb-2 group-hover:text-brand-pink transition-colors line-clamp-1">
+                        <h3 className="text-heading-3 text-foreground mb-2 group-hover:text-brand-pink transition-colors line-clamp-2 capitalize">
                           {product.name}
                         </h3>
                         
