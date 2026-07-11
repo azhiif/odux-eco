@@ -86,7 +86,7 @@ export default function AboutPage() {
           
           <motion.div initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="relative h-[500px] rounded-[3rem] overflow-hidden shadow-2xl border-8 border-white transform rotate-2">
             <Image
-              src="https://iili.io/FiuGFHP.jpg"
+              src="https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkqIHUcQMtoJaxENzqYduj6Rl93alBPgijQ_Vz0_2VegdOZO-iEJHSZ7Jzt-KdnWqQcrZrAoR3Bd6zMFiABLizp8zc4uvL3KaR3mWadUBZ4-n8vVepM2SoFH3Dc0JhG16MncIwpX6jWW8Y=s1360-w1360-h1020-rw"
               alt="Odux Art Workshop"
               fill
               className="object-cover"
