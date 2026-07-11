@@ -59,7 +59,10 @@ export default function CartPage() {
     }
   }
 
-  const totalAmount = cartItems.reduce((sum, item) => sum + (item.products.price * item.quantity), 0)
+  const totalAmount = cartItems.reduce((sum, item) => {
+    const itemPrice = item.variantSnapshot ? item.variantSnapshot.price : item.products.price
+    return sum + (itemPrice * item.quantity)
+  }, 0)
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0)
 
   if (loading) {
@@ -150,12 +153,12 @@ export default function CartPage() {
                     <Link href={`/products/${item.products.id}`} className="shrink-0">
                       <div className="relative w-28 h-28 md:w-36 md:h-36 bg-gray-50 rounded-2xl overflow-hidden border-2 border-gray-100 group-hover:border-brand-pink transition-colors">
                         <Image
-                          src={item.custom_images?.[0] || item.products.image_urls[0]}
+                          src={item.customerUploads?.[0] || item.variantSnapshot?.image || item.products.image_urls[0]}
                           alt={item.products.name}
                           fill
                           className="object-cover"
                         />
-                        {item.custom_images && item.custom_images.length > 0 && (
+                        {item.customerUploads && item.customerUploads.length > 0 && (
                           <div className="absolute bottom-2 left-2 right-2 bg-black/60 backdrop-blur-md text-white rounded-lg p-1.5 flex items-center justify-center shadow-lg">
                             <Sparkles className="h-3 w-3 text-brand-orange mr-1" />
                             <span className="text-[10px] font-bold uppercase tracking-wider">Custom</span>
@@ -171,8 +174,14 @@ export default function CartPage() {
                         </h3>
                       </Link>
                       
+                      {item.variantSnapshot && (
+                        <p className="text-sm text-gray-500 font-medium mb-2">
+                          Variant: {item.variantSnapshot.type} {item.variantSnapshot.size && `(${item.variantSnapshot.size})`}
+                        </p>
+                      )}
+                      
                       <p className="text-2xl font-bold text-brand-purple mb-4">
-                        {formatPrice(item.products.price)}
+                        {formatPrice(item.variantSnapshot ? item.variantSnapshot.price : item.products.price)}
                       </p>
                       
                       <div className="flex items-center gap-4">
@@ -201,7 +210,7 @@ export default function CartPage() {
                         <div className="ml-auto text-right">
                           <p className="text-sm text-gray-400 font-medium">Total</p>
                           <p className="text-lg font-bold text-gray-800">
-                            {formatPrice(item.products.price * item.quantity)}
+                            {formatPrice((item.variantSnapshot ? item.variantSnapshot.price : item.products.price) * item.quantity)}
                           </p>
                         </div>
                       </div>

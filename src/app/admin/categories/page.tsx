@@ -1,10 +1,11 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { db } from '@/lib/firebase'
+import { db, storage } from '@/lib/firebase'
 import { collection, query, orderBy, getDocs, updateDoc, doc, addDoc, deleteDoc } from 'firebase/firestore'
-import { Plus, Edit, Trash2, Eye, EyeOff, Image as ImageIcon, Tag } from 'lucide-react'
+import { Plus, Edit, Trash2, Eye, EyeOff, Image as ImageIcon, Tag, Upload, X } from 'lucide-react'
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage'
 import { motion } from 'framer-motion'
 import { Modal } from '@/components/ui/modal'
 
@@ -35,6 +36,8 @@ export default function CategoriesPage() {
     is_active: true,
     sort_order: 0
   })
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [uploadingImage, setUploadingImage] = useState(false)
 
   useEffect(() => {
     fetchCategories()
@@ -59,6 +62,33 @@ export default function CategoriesPage() {
     return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
   }
 
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    setUploadingImage(true)
+    try {
+      const fileExt = file.name.split('.').pop()
+      const fileName = `category-${Date.now()}.${fileExt}`
+      const storageRef = ref(storage, `categories/${fileName}`)
+      
+      await uploadBytes(storageRef, file)
+      const publicUrl = await getDownloadURL(storageRef)
+      setFormData(prev => ({ ...prev, image_url: publicUrl }))
+    } catch (error) {
+      console.error('Error uploading image:', error)
+      alert('Error uploading image. Please try again.')
+    } finally {
+      setUploadingImage(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
+  const removeImage = () => {
+    setFormData(prev => ({ ...prev, image_url: '' }))
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
@@ -68,6 +98,14 @@ export default function CategoriesPage() {
       }
 
       if (editingCategory) {
+        if (editingCategory.image_url && editingCategory.image_url !== formData.image_url && editingCategory.image_url.includes('firebasestorage.googleapis.com')) {
+          try {
+            const oldImageRef = ref(storage, editingCategory.image_url)
+            await deleteObject(oldImageRef)
+          } catch (deleteError) {
+            console.error('Error deleting old image:', deleteError)
+          }
+        }
         await updateDoc(doc(db, 'categories', editingCategory.id), categoryData)
       } else {
         await addDoc(collection(db, 'categories'), {
@@ -112,10 +150,18 @@ export default function CategoriesPage() {
     })
   }
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (category: Category) => {
     if (!confirm('Are you sure you want to delete this category? This will also affect products in this category.')) return
     try {
-      await deleteDoc(doc(db, 'categories', id))
+      if (category.image_url && category.image_url.includes('firebasestorage.googleapis.com')) {
+        try {
+          const imageRef = ref(storage, category.image_url)
+          await deleteObject(imageRef)
+        } catch (deleteError) {
+          console.error('Error deleting category image:', deleteError)
+        }
+      }
+      await deleteDoc(doc(db, 'categories', category.id))
       await fetchCategories()
       setModalState({
         isOpen: true,
@@ -208,14 +254,47 @@ export default function CategoriesPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Image URL</label>
-                <input
-                  type="url"
-                  value={formData.image_url}
-                  onChange={(e) => setFormData({...formData, image_url: e.target.value})}
-                  className="form-input"
-                  placeholder="https://..."
-                />
+                <label className="block text-sm font-bold text-gray-700 mb-2">Category Image</label>
+                <div className="flex items-center gap-4">
+                  {formData.image_url ? (
+                    <div className="flex flex-col items-start gap-2">
+                      <div className="relative w-24 h-24 rounded-2xl overflow-hidden border-2 border-gray-100 shadow-sm">
+                        <img src={formData.image_url} alt="Preview" className="w-full h-full object-cover" />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={removeImage}
+                        className="text-xs font-bold text-red-500 hover:text-red-700 bg-red-50 px-3 py-1.5 rounded-lg flex items-center transition-colors"
+                      >
+                        <X className="w-3 h-3 mr-1" /> Remove Image
+                      </button>
+                    </div>
+                  ) : (
+                    <div 
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-24 h-24 rounded-2xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 cursor-pointer hover:border-brand-pink hover:text-brand-pink transition-colors bg-gray-50 hover:bg-pink-50/50"
+                    >
+                      {uploadingImage ? (
+                        <div className="w-6 h-6 border-2 border-brand-pink border-t-transparent rounded-full animate-spin"></div>
+                      ) : (
+                        <>
+                          <Upload className="w-6 h-6 mb-1" />
+                          <span className="text-[10px] font-bold uppercase tracking-wider">Upload</span>
+                        </>
+                      )}
+                    </div>
+                  )}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-500 font-medium">Upload a high-quality image for the category thumbnail. Recommended aspect ratio 1:1 or 16:9.</p>
+                  </div>
+                </div>
               </div>
 
               <div className="flex gap-4">
@@ -302,10 +381,10 @@ export default function CategoriesPage() {
                     <button onClick={() => handleToggleActive(category.id, category.is_active)} className={`inline-flex items-center px-4 py-2 font-bold rounded-xl transition-colors text-sm ${category.is_active ? 'bg-orange-50 text-orange-600 hover:bg-orange-600 hover:text-white' : 'bg-green-50 text-green-600 hover:bg-green-600 hover:text-white'}`}>
                       {category.is_active ? <><EyeOff className="h-4 w-4 mr-2" /> Deactivate</> : <><Eye className="h-4 w-4 mr-2" /> Activate</>}
                     </button>
-                    <button onClick={() => handleDelete(category.id)} className="inline-flex items-center px-4 py-2 bg-red-50 text-red-500 font-bold rounded-xl hover:bg-red-500 hover:text-white transition-colors text-sm">
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete
-                    </button>
+                      <button onClick={() => handleDelete(category)} className="inline-flex items-center text-red-600 hover:text-red-900 font-medium px-3 py-1.5 hover:bg-red-50 rounded-lg transition-colors">
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete
+                      </button>
                     
                     <span className="ml-auto text-xs font-bold text-gray-400 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
                       Sort: {category.sort_order}

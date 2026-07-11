@@ -2,6 +2,16 @@ import { db } from './firebase'
 import { collection, query, where, getDocs, doc, getDoc, limit, orderBy } from 'firebase/firestore'
 import { serializeDoc } from './firebase-utils'
 
+export interface ProductVariant {
+  id: string
+  type: string
+  size: string
+  price: number
+  images: string[]
+  stock?: number
+  isActive: boolean
+}
+
 export interface Product {
   id: string
   name: string
@@ -21,6 +31,7 @@ export interface Product {
     name: string
     slug: string
   }
+  variants?: ProductVariant[]
 }
 
 export async function getProducts(): Promise<Product[]> {

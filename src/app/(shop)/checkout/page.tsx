@@ -52,6 +52,14 @@ interface CartItem {
   id: string
   product_id: string
   quantity: number
+  variantId?: string
+  variantSnapshot?: {
+    type: string
+    size: string
+    price: number
+    image: string
+  }
+  customerUploads?: string[]
   products: {
     id: string
     name: string
@@ -59,7 +67,6 @@ interface CartItem {
     image_urls: string[]
     stock_quantity: number
   }
-  custom_images?: string[]
 }
 
 interface ShippingAddress {
@@ -190,7 +197,10 @@ export default function CheckoutPage() {
         }
       }
 
-      const totalAmount = cartItems.reduce((sum, item) => sum + (item.products.price * item.quantity), 0)
+      const totalAmount = cartItems.reduce((sum, item) => {
+        const itemPrice = item.variantSnapshot ? item.variantSnapshot.price : item.products.price
+        return sum + (itemPrice * item.quantity)
+      }, 0)
 
       orderRef = await addDoc(collection(db, 'orders'), {
         user_id: user.uid,
@@ -208,8 +218,10 @@ export default function CheckoutPage() {
           order_id: orderRef.id,
           product_id: item.product_id,
           quantity: item.quantity,
-          price: item.products.price,
-          custom_images: item.custom_images || []
+          price: item.variantSnapshot ? item.variantSnapshot.price : item.products.price,
+          customerUploads: item.customerUploads || [],
+          variantId: item.variantId || null,
+          variantSnapshot: item.variantSnapshot || null
         })
       })
       await batch.commit()
@@ -331,7 +343,7 @@ export default function CheckoutPage() {
     )
   }
 
-  const totalAmount = cartItems.reduce((sum, item) => sum + (item.products.price * item.quantity), 0)
+  const totalAmount = cartItems.reduce((sum, item) => sum + ((item.variantSnapshot ? item.variantSnapshot.price : item.products.price) * item.quantity), 0)
 
   // Input Field Helper Component
 
@@ -439,20 +451,27 @@ export default function CheckoutPage() {
                 </h2>
                 
                 <div className="space-y-4 mb-6">
-                  {cartItems.map((item) => (
+                  {cartItems.map((item) => {
+                    const itemPrice = item.variantSnapshot ? item.variantSnapshot.price : item.products.price
+                    return (
                     <div key={item.id} className="flex gap-4 items-center bg-white/60 p-3 rounded-2xl backdrop-blur-sm border border-white">
                       <div className="w-16 h-16 rounded-xl overflow-hidden relative shrink-0">
-                        <Image src={item.custom_images?.[0] || item.products.image_urls[0]} alt={item.products.name} fill className="object-cover" />
+                        <Image src={item.customerUploads?.[0] || item.variantSnapshot?.image || item.products.image_urls[0]} alt={item.products.name} fill className="object-cover" />
                       </div>
                       <div className="flex-1">
                         <h4 className="font-bold text-gray-800 text-sm line-clamp-1">{item.products.name}</h4>
-                        <p className="text-xs text-gray-500 font-medium">Qty: {item.quantity}</p>
+                        {item.variantSnapshot && (
+                          <p className="text-xs text-gray-500 font-medium">
+                            {item.variantSnapshot.type} {item.variantSnapshot.size && `(${item.variantSnapshot.size})`}
+                          </p>
+                        )}
+                        <p className="text-xs text-gray-500 font-medium mt-1">Qty: {item.quantity}</p>
                       </div>
                       <div className="font-bold text-brand-purple shrink-0">
-                        {formatPrice(item.products.price * item.quantity)}
+                        {formatPrice(itemPrice * item.quantity)}
                       </div>
                     </div>
-                  ))}
+                  )})}
                 </div>
 
                 <div className="bg-white rounded-2xl p-5 mb-8 border-2 border-white shadow-sm space-y-3">

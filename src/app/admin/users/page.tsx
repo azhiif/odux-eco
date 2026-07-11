@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { db } from '@/lib/firebase'
 import { collection, query, getDocs, orderBy, doc, updateDoc } from 'firebase/firestore'
-import { Users, Shield, ShieldAlert, Mail, Calendar, Search, User as UserIcon } from 'lucide-react'
+import { Users, Shield, ShieldAlert, Mail, Calendar, Search, User as UserIcon, Phone, Key, Clock } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { Modal } from '@/components/ui/modal'
 
@@ -14,6 +14,9 @@ interface UserProfile {
   is_admin: boolean
   created_at: any
   phone_number?: string
+  phone?: string
+  provider?: string
+  last_login?: any
 }
 
 export default function UsersPage() {
@@ -109,9 +112,9 @@ export default function UsersPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-gray-50 border-b-2 border-gray-100">
-                <th className="p-4 font-bold text-sm text-gray-400 uppercase tracking-wider">User</th>
+                <th className="p-4 font-bold text-sm text-gray-400 uppercase tracking-wider">User Details</th>
                 <th className="p-4 font-bold text-sm text-gray-400 uppercase tracking-wider">Role</th>
-                <th className="p-4 font-bold text-sm text-gray-400 uppercase tracking-wider">Joined</th>
+                <th className="p-4 font-bold text-sm text-gray-400 uppercase tracking-wider">Activity & Auth</th>
                 <th className="p-4 font-bold text-sm text-gray-400 uppercase tracking-wider text-right">Actions</th>
               </tr>
             </thead>
@@ -132,9 +135,15 @@ export default function UsersPage() {
                         </div>
                         <div>
                           <div className="font-bold text-gray-900">{user.display_name || 'Anonymous User'}</div>
-                          <div className="text-sm font-medium text-gray-500 flex items-center mt-1">
-                            <Mail className="h-3 w-3 mr-1" />
-                            {user.email || 'No email'}
+                          <div className="text-sm font-medium text-gray-500 flex flex-col mt-1 space-y-1">
+                            <span className="flex items-center">
+                              <Mail className="h-3 w-3 mr-1" />
+                              {user.email || 'No email'}
+                            </span>
+                            <span className="flex items-center">
+                              <Phone className="h-3 w-3 mr-1" />
+                              {user.phone || user.phone_number || 'No phone'}
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -151,9 +160,19 @@ export default function UsersPage() {
                       )}
                     </td>
                     <td className="p-4 text-sm font-medium text-gray-500">
-                      <div className="flex items-center">
-                        <Calendar className="h-4 w-4 mr-2" />
-                        {user.created_at ? new Date(user.created_at.seconds * 1000).toLocaleDateString() : 'N/A'}
+                      <div className="flex flex-col space-y-2">
+                        <div className="flex items-center" title="Joined Date">
+                          <Calendar className="h-4 w-4 mr-2 text-gray-400" />
+                          {user.created_at ? (user.created_at.seconds ? new Date(user.created_at.seconds * 1000).toLocaleDateString() : new Date(user.created_at).toLocaleDateString()) : 'N/A'}
+                        </div>
+                        <div className="flex items-center" title="Last Login">
+                          <Clock className="h-4 w-4 mr-2 text-gray-400" />
+                          {user.last_login ? (user.last_login.seconds ? new Date(user.last_login.seconds * 1000).toLocaleDateString() : new Date(user.last_login).toLocaleDateString()) : 'Never'}
+                        </div>
+                        <div className="flex items-center" title="Sign-in Provider">
+                          <Key className="h-4 w-4 mr-2 text-gray-400" />
+                          <span className="capitalize">{user.provider || 'Phone'}</span>
+                        </div>
                       </div>
                     </td>
                     <td className="p-4 text-right">

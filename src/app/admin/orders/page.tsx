@@ -37,7 +37,13 @@ interface UnifiedOrder {
     quantity: number
     unit_price: number
     total_price: number
-    custom_image?: string
+    customerUploads?: string[]
+    variantSnapshot?: {
+      type: string
+      size: string
+      price: number
+      image: string
+    }
     products: {
       id: string
       name: string
@@ -107,7 +113,8 @@ export default function OrdersPage() {
             quantity: itemData.quantity,
             unit_price: itemData.price,
             total_price: itemData.quantity * itemData.price,
-            custom_image: itemData.custom_image || null,
+            customerUploads: itemData.customerUploads || (itemData.custom_image ? [itemData.custom_image] : []),
+            variantSnapshot: itemData.variantSnapshot || null,
             products: {
               id: productSnap.id,
               name: productData.name,
@@ -403,11 +410,11 @@ export default function OrdersPage() {
                           <div key={item.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl w-full sm:w-[calc(50%-0.5rem)] md:w-64 border border-gray-100">
                             <div className="relative w-14 h-14 flex-shrink-0">
                               <img
-                                src={item.custom_image || item.products.image_urls[0]}
+                                src={item.customerUploads?.[0] || item.variantSnapshot?.image || item.products.image_urls[0]}
                                 alt={item.products.name}
                                 className="w-full h-full object-cover rounded-xl shadow-sm"
                               />
-                              {item.custom_image && (
+                              {item.customerUploads && item.customerUploads.length > 0 && (
                                 <div className="absolute -top-1 -right-1 bg-brand-pink text-white rounded-full p-1 shadow-md" title="Personalized Photo">
                                   <Plus className="h-2 w-2" />
                                 </div>
@@ -513,39 +520,47 @@ export default function OrdersPage() {
                         <div key={item.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
                           <div className="relative w-24 h-24 flex-shrink-0">
                             <img
-                              src={item.custom_image || item.products.image_urls[0]}
+                              src={item.customerUploads?.[0] || item.variantSnapshot?.image || item.products.image_urls[0]}
                               alt={item.products.name}
                               className="w-full h-full object-cover rounded-xl shadow-sm border border-gray-200"
                             />
-                            {item.custom_image && (
+                            {item.customerUploads && item.customerUploads.length > 0 && (
                               <div className="absolute -top-2 -right-2 bg-brand-pink text-white rounded-full p-1.5 shadow-md" title="Personalized Photo">
                                 <Plus className="h-3 w-3" />
                               </div>
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-bold text-gray-900 text-lg mb-1">{item.products.name}</p>
+                            <p className="font-bold text-gray-900 text-lg mb-1">
+                              {item.products.name}
+                              {item.variantSnapshot && (
+                                <span className="ml-2 text-sm font-medium text-brand-purple bg-purple-50 px-2 py-1 rounded-md">
+                                  {item.variantSnapshot.type} / {item.variantSnapshot.size}
+                                </span>
+                              )}
+                            </p>
                             <p className="text-gray-500 font-medium">Quantity: {item.quantity}</p>
                             <p className="text-gray-500 font-medium">Unit Price: {formatPrice(item.unit_price)}</p>
                           </div>
                           <div className="text-left sm:text-right w-full sm:w-auto flex sm:flex-col justify-between items-center sm:items-end gap-3 mt-4 sm:mt-0">
                             <p className="font-heading font-bold text-xl text-gray-900">{formatPrice(item.total_price)}</p>
-                            {item.custom_image && (
+                            {item.customerUploads && item.customerUploads.map((url, idx) => (
                               <button
+                                key={idx}
                                 onClick={() => {
                                   const link = document.createElement('a')
-                                  link.href = item.custom_image || ''
-                                  link.download = `custom_image_${item.id}.jpg`
+                                  link.href = url
+                                  link.download = `customer_upload_${item.id}_${idx}.jpg`
                                   link.target = '_blank'
                                   document.body.appendChild(link)
                                   link.click()
                                   document.body.removeChild(link)
                                 }}
-                                className="inline-flex items-center px-4 py-2 bg-white border-2 border-gray-200 text-gray-700 hover:border-gray-300 rounded-xl font-bold text-xs transition-colors"
+                                className="inline-flex items-center px-4 py-2 bg-white border-2 border-gray-200 text-gray-700 hover:border-gray-300 rounded-xl font-bold text-xs transition-colors mb-2"
                               >
-                                <Download className="h-4 w-4 mr-2" /> Download Photo
+                                <Download className="h-4 w-4 mr-2" /> Download Photo {idx + 1}
                               </button>
-                            )}
+                            ))}
                           </div>
                         </div>
                       ))}

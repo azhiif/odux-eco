@@ -5,7 +5,14 @@ export interface CartItem {
   id: string
   product_id: string
   quantity: number
-  custom_images?: string[]
+  customerUploads?: string[]
+  variantId?: string
+  variantSnapshot?: {
+    type: string
+    size: string
+    price: number
+    image: string
+  }
   products: {
     id: string
     name: string
@@ -36,7 +43,9 @@ export async function getCartItems(): Promise<CartItem[]> {
       id: cartDoc.id,
       product_id: data.product_id,
       quantity: data.quantity,
-      custom_images: data.custom_images || (data.custom_image ? [data.custom_image] : undefined),
+      customerUploads: data.customerUploads || (data.custom_image ? [data.custom_image] : undefined),
+      variantId: data.variantId,
+      variantSnapshot: data.variantSnapshot,
       products: { id: productSnap.id, ...productSnap.data() } as any
     } as CartItem
   }))
@@ -44,7 +53,7 @@ export async function getCartItems(): Promise<CartItem[]> {
   return items.filter(Boolean) as CartItem[]
 }
 
-export async function addToCart(productId: string, quantity: number = 1, customImages?: string[]) {
+export async function addToCart(productId: string, quantity: number = 1, customerUploads?: string[]) {
   const user = auth.currentUser
   
   if (!user) {
@@ -59,7 +68,7 @@ export async function addToCart(productId: string, quantity: number = 1, customI
     const existingDoc = snapshot.docs[0]
     await updateDoc(doc(db, 'shopping_cart', existingDoc.id), {
       quantity: existingDoc.data().quantity + quantity,
-      ...(customImages ? { custom_images: customImages } : {})
+      ...(customerUploads ? { customerUploads: customerUploads } : {})
     })
     return { id: existingDoc.id }
   } else {
@@ -67,7 +76,7 @@ export async function addToCart(productId: string, quantity: number = 1, customI
       user_id: user.uid,
       product_id: productId,
       quantity,
-      ...(customImages ? { custom_images: customImages } : {})
+      ...(customerUploads ? { customerUploads: customerUploads } : {})
     })
     return { id: docRef.id }
   }

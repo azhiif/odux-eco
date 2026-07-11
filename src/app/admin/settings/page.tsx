@@ -17,6 +17,8 @@ export default function AdminSettingsPage() {
     socialInstagram: '@odux.art',
     socialFacebook: '',
     enableNotifications: true,
+    instagramPosts: [] as { imageUrl: string, postUrl: string }[],
+    reviewWidgetHtml: '',
   })
   const [modalState, setModalState] = useState<{isOpen: boolean, title: string, message: string, type: 'error'|'success'|'info'}>({
     isOpen: false, title: '', message: '', type: 'info'
@@ -183,6 +185,38 @@ export default function AdminSettingsPage() {
               </div>
             </div>
           </motion.div>
+
+          {/* Integrations */}
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+            <div className="premium-card bg-white p-6">
+              <h2 className="text-heading-3 text-gray-900 mb-6 flex items-center">
+                <div className="w-10 h-10 bg-green-50 text-brand-green rounded-xl flex items-center justify-center mr-4">
+                  <Globe className="h-5 w-5" />
+                </div>
+                Integrations
+              </h2>
+              
+              <div className="space-y-5">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">
+                    Google Maps Reviews Widget (Embed Code)
+                  </label>
+                  <p className="text-xs text-gray-500 mb-3">
+                    Paste your embed code from Elfsight, Trustpilot, or Google Maps to display customer reviews on your homepage. (Accepts HTML/iframes)
+                  </p>
+                  <textarea
+                    value={settings.reviewWidgetHtml || ''}
+                    onChange={(e) => setSettings({ ...settings, reviewWidgetHtml: e.target.value })}
+                    className="form-input font-mono text-xs rounded-xl"
+                    rows={5}
+                    placeholder={'<iframe src="..." width="100%" height="500"></iframe>'}
+                  />
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+
 
           {/* Security & Notifications */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>

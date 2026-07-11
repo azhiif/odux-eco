@@ -6,8 +6,10 @@ import Link from 'next/link'
 import { db, storage } from '@/lib/firebase'
 import { collection, query, where, getDocs, addDoc, doc, getDoc, updateDoc } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
-import { ArrowLeft, Upload, X, Package } from 'lucide-react'
+import { ArrowLeft, Upload, X, Package, Plus, Trash } from 'lucide-react'
 import { Modal } from '@/components/ui/modal'
+
+import { ProductVariant } from '@/lib/products'
 
 interface Category {
   id: string
@@ -22,6 +24,7 @@ export default function NewProductPage() {
   const [loading, setLoading] = useState(false)
   const [categories, setCategories] = useState<Category[]>([])
   const [uploadedImages, setUploadedImages] = useState<string[]>([])
+  const [variants, setVariants] = useState<ProductVariant[]>([])
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -67,6 +70,9 @@ export default function NewProductPage() {
         })
         if (data.image_urls) {
           setUploadedImages(data.image_urls)
+        }
+        if (data.variants) {
+          setVariants(data.variants)
         }
       }
     } catch (error) {
@@ -132,6 +138,58 @@ export default function NewProductPage() {
     setUploadedImages(uploadedImages.filter((_, i) => i !== index))
   }
 
+  const addVariant = () => {
+    setVariants([...variants, {
+      id: Math.random().toString(36).substr(2, 9),
+      type: '',
+      size: '',
+      price: parseFloat(formData.price || '0'),
+      images: [],
+      stock: 0,
+      isActive: true
+    }])
+  }
+
+  const updateVariant = (id: string, field: keyof ProductVariant, value: any) => {
+    setVariants(variants.map(v => v.id === id ? { ...v, [field]: value } : v))
+  }
+
+  const removeVariant = (id: string) => {
+    if (confirm('Are you sure you want to remove this variant?')) {
+      setVariants(variants.filter(v => v.id !== id))
+    }
+  }
+
+  const handleVariantImageUpload = async (id: string, event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files
+    if (!files) return
+    setLoading(true)
+    try {
+      const uploadPromises = Array.from(files).map(async (file) => {
+        const fileExt = file.name.split('.').pop()
+        const fileName = `${Date.now()}-${Math.random()}.${fileExt}`
+        const storageRef = ref(storage, `products/variants/${fileName}`)
+        await uploadBytes(storageRef, file)
+        return await getDownloadURL(storageRef)
+      })
+      const imageUrls = await Promise.all(uploadPromises)
+      setVariants(variants.map(v => v.id === id ? { ...v, images: [...v.images, ...imageUrls] } : v))
+    } catch (error) {
+      console.error('Error uploading variant images:', error)
+      alert('Error uploading variant images')
+    } finally {
+      setLoading(false)
+      event.target.value = ''
+    }
+  }
+  
+  const removeVariantImage = (variantId: string, imageIndex: number) => {
+    setVariants(variants.map(v => v.id === variantId ? {
+      ...v,
+      images: v.images.filter((_, idx) => idx !== imageIndex)
+    } : v))
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -158,6 +216,7 @@ export default function NewProductPage() {
         weight: formData.weight ? parseFloat(formData.weight as string) : null,
         sku: formData.sku,
         image_urls: uploadedImages,
+        variants: variants,
         featured: formData.featured,
         is_active: true,
         ...(productId ? {} : { created_at: new Date().toISOString() }),
@@ -329,6 +388,125 @@ export default function NewProductPage() {
               Featured Product (Shows up on the homepage)
             </label>
           </div>
+        </div>
+
+        {/* Variants */}
+        <div className="premium-card bg-white p-8">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-heading-3 text-gray-900">Product Variants</h2>
+            <button
+              type="button"
+              onClick={addVariant}
+              className="inline-flex items-center px-4 py-2 bg-brand-purple text-white rounded-full font-bold text-sm hover:bg-purple-700 transition-colors shadow-sm"
+            >
+              <Plus className="h-4 w-4 mr-1" /> Add Variant
+            </button>
+          </div>
+          
+          {variants.length === 0 ? (
+            <div className="text-center py-8 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
+              <p className="text-gray-500 font-medium">No variants added yet. Add variants for different types, sizes, or colors.</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {variants.map((variant, index) => (
+                <div key={variant.id} className="p-6 bg-gray-50/80 rounded-3xl border border-gray-200 relative shadow-sm hover:shadow-md transition-shadow">
+                  <button
+                    type="button"
+                    onClick={() => removeVariant(variant.id)}
+                    className="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition-colors bg-white p-2 rounded-full shadow-sm"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                      <label className="block text-sm font-bold text-gray-700 mb-2">Type / Design / Color</label>
+                      <input
+                        type="text"
+                        value={variant.type}
+                        onChange={(e) => updateVariant(variant.id, 'type', e.target.value)}
+                        className="form-input text-base rounded-xl"
+                        placeholder="e.g., Glossy, Red, Mug"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-gray-700 mb-2">Size (Optional)</label>
+                      <input
+                        type="text"
+                        value={variant.size}
+                        onChange={(e) => updateVariant(variant.id, 'size', e.target.value)}
+                        className="form-input text-base rounded-xl"
+                        placeholder="e.g., 12x12, XL"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-gray-700 mb-2">Variant Price (₹)</label>
+                      <input
+                        type="number"
+                        value={variant.price}
+                        onChange={(e) => updateVariant(variant.id, 'price', parseFloat(e.target.value))}
+                        className="form-input text-base rounded-xl"
+                        placeholder="0.00"
+                        step="0.01"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-gray-700 mb-2">Stock</label>
+                      <input
+                        type="number"
+                        value={variant.stock || 0}
+                        onChange={(e) => updateVariant(variant.id, 'stock', parseInt(e.target.value))}
+                        className="form-input text-base rounded-xl"
+                        placeholder="0"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mb-6">
+                    <label className="inline-flex items-center cursor-pointer bg-white px-4 py-3 rounded-xl border-2 border-gray-100 hover:border-gray-200 transition-colors shadow-sm">
+                      <input
+                        type="checkbox"
+                        checked={variant.isActive !== false}
+                        onChange={(e) => updateVariant(variant.id, 'isActive', e.target.checked)}
+                        className="w-5 h-5 text-brand-green rounded border-gray-300 focus:ring-brand-green mr-3"
+                      />
+                      <span className="text-sm font-bold text-gray-700">Active (Visible to customers)</span>
+                    </label>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-2">Variant Images</label>
+                    <div className="flex flex-wrap gap-3">
+                      {variant.images.map((img, imgIdx) => (
+                        <div key={imgIdx} className="relative w-20 h-20 rounded-xl overflow-hidden border border-gray-200 group shadow-sm">
+                          <img src={img} alt={`Variant ${index} img ${imgIdx}`} className="w-full h-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => removeVariantImage(variant.id, imgIdx)}
+                            className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="w-4 h-4 text-white" />
+                          </button>
+                        </div>
+                      ))}
+                      <label className="w-20 h-20 rounded-xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 cursor-pointer hover:border-brand-purple hover:text-brand-purple transition-all bg-white hover:bg-purple-50 group">
+                        <Upload className="w-5 h-5 mb-1 group-hover:-translate-y-0.5 transition-transform" />
+                        <span className="text-[10px] font-bold">Upload</span>
+                        <input
+                          type="file"
+                          multiple
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => handleVariantImageUpload(variant.id, e)}
+                        />
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Images */}

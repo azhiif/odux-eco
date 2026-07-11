@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -12,7 +12,7 @@ import { formatPrice } from '@/lib/utils'
 import { ShoppingCart, Heart, Share2, Star, Upload, Camera, Gift, Sparkles, ChevronLeft, X } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Modal } from '@/components/ui/modal'
-import { Product } from '@/lib/products'
+import { Product, ProductVariant } from '@/lib/products'
 
 interface ProductClientProps {
   product: Product
@@ -26,14 +26,62 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
   const [uploadedImages, setUploadedImages] = useState<string[]>([])
   const [uploading, setUploading] = useState(false)
   const [showUploadModal, setShowUploadModal] = useState(false)
-  const [modalState, setModalState] = useState<{isOpen: boolean, title: string, message: string, type: 'error'|'success'|'info'}>({
+  const [modalState, setModalState] = useState<{ isOpen: boolean, title: string, message: string, type: 'error' | 'success' | 'info' }>({
     isOpen: false, title: '', message: '', type: 'info'
   })
+
+  const availableVariants = useMemo(() => product.variants?.filter(v => v.isActive !== false) || [], [product.variants])
+  const uniqueTypes = useMemo(() => Array.from(new Set(availableVariants.map(v => v.type).filter(Boolean))), [availableVariants])
+  const uniqueSizes = useMemo(() => Array.from(new Set(availableVariants.map(v => v.size).filter(Boolean))), [availableVariants])
+
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(
+    availableVariants.length > 0 ? availableVariants[0] : null
+  )
+
+  const actualSelectedType = selectedVariant?.type || ''
+  const actualSelectedSize = selectedVariant?.size || ''
+
+  const galleryImages = useMemo(() => {
+    const images = [...(product.image_urls || [])]
+    if (selectedVariant?.images && selectedVariant.images.length > 0) {
+      // Prepend selected variant images so they act as the primary preview
+      return Array.from(new Set([...selectedVariant.images, ...images]))
+    }
+    return Array.from(new Set(images))
+  }, [product.image_urls, selectedVariant])
+
+  const handleImageSelect = (index: number) => {
+    setSelectedImage(index)
+  }
+
+  const handleTypeSelect = (type: string) => {
+    let newVariant = availableVariants.find(v => v.type === type && v.size === actualSelectedSize)
+    if (!newVariant) newVariant = availableVariants.find(v => v.type === type)
+    if (newVariant) {
+      setSelectedVariant(newVariant)
+      if (newVariant.images && newVariant.images.length > 0) {
+        setSelectedImage(0)
+      }
+    }
+  }
+
+  const handleSizeSelect = (size: string) => {
+    let newVariant = availableVariants.find(v => v.type === actualSelectedType && v.size === size)
+    if (!newVariant) newVariant = availableVariants.find(v => v.size === size)
+    if (newVariant) {
+      setSelectedVariant(newVariant)
+      if (newVariant.images && newVariant.images.length > 0) {
+        setSelectedImage(0)
+      }
+    }
+  }
+
+  const displayPrice = selectedVariant ? selectedVariant.price : product.price
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || [])
     const validFiles = files.filter(file => file.type.startsWith('image/'))
-    
+
     if (validFiles.length !== files.length) {
       setModalState({
         isOpen: true,
@@ -60,11 +108,11 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
 
       const uploadPromises = validFiles.map(async (file) => {
         const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}_${file.name}`
-        const storageRef = ref(storage, `custom_images/${user.uid}/${fileName}`)
+        const storageRef = ref(storage, `customerUploads/${user.uid}/${fileName}`)
         await uploadBytes(storageRef, file)
         return await getDownloadURL(storageRef)
       })
-      
+
       const downloadURLs = await Promise.all(uploadPromises)
       setUploadedImages(prev => [...prev, ...downloadURLs])
     } catch (error) {
@@ -97,16 +145,33 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
         user_id: user.uid,
         product_id: product.id,
         quantity: quantity,
-        custom_images: uploadedImages
+        customerUploads: uploadedImages,
+        variantId: selectedVariant?.id || null,
+        variantSnapshot: selectedVariant ? {
+          type: selectedVariant.type,
+          size: selectedVariant.size,
+          price: selectedVariant.price,
+          image: selectedVariant.images?.[0] || ''
+        } : null
       })
 
       try {
         fetch('/api/notify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            type: 'ADD_TO_CART', 
-            data: { product_id: product.id, quantity, custom_images: uploadedImages } 
+          body: JSON.stringify({
+            type: 'ADD_TO_CART',
+            data: {
+              product_id: product.id,
+              quantity,
+              customerUploads: uploadedImages,
+              variantSnapshot: selectedVariant ? {
+                type: selectedVariant.type,
+                size: selectedVariant.size,
+                price: selectedVariant.price,
+                image: selectedVariant.images?.[0] || ''
+              } : null
+            }
           })
         })
       } catch (notifyErr) {
@@ -149,9 +214,9 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
         {/* Product Gallery */}
         <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
           <div className="relative aspect-square bg-white rounded-[2rem] md:rounded-[3rem] shadow-2xl shadow-brand-pink/10 overflow-hidden border-4 border-white">
-            {product.image_urls?.[selectedImage] ? (
+            {galleryImages?.[selectedImage] ? (
               <Image
-                src={product.image_urls[selectedImage]}
+                src={galleryImages[selectedImage]}
                 alt={product.name}
                 fill
                 sizes="(max-width: 1024px) 100vw, 50vw"
@@ -171,19 +236,18 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
           </div>
 
           {/* Thumbnails */}
-          {product.image_urls && product.image_urls.length > 1 && (
+          {galleryImages && galleryImages.length > 1 && (
             <div className="flex space-x-4 overflow-x-auto pb-4 hide-scrollbar justify-center">
-              {product.image_urls.map((url, index) => (
+              {galleryImages.map((url, index) => (
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   key={index}
-                  onClick={() => setSelectedImage(index)}
-                  className={`relative w-20 h-20 md:w-24 md:h-24 rounded-2xl overflow-hidden flex-shrink-0 border-4 transition-all ${
-                    selectedImage === index
+                  onClick={() => handleImageSelect(index)}
+                  className={`relative w-20 h-20 md:w-24 md:h-24 rounded-2xl overflow-hidden flex-shrink-0 border-4 transition-all ${selectedImage === index
                       ? 'border-brand-pink shadow-[0_0_15px_rgba(255,71,126,0.3)]'
                       : 'border-white shadow-md hover:border-pink-100'
-                  }`}
+                    }`}
                 >
                   <Image
                     src={url}
@@ -200,10 +264,10 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
 
         {/* Product Information */}
         <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="space-y-8 flex flex-col justify-center">
-          
+
           <div className="bg-white rounded-[2rem] md:rounded-[3rem] p-8 md:p-10 shadow-2xl shadow-brand-purple/5 border-2 border-white relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-brand-pink/10 to-transparent rounded-bl-full z-0"></div>
-            
+
             <div className="relative z-10">
               <div className="flex items-center mb-4 space-x-2">
                 <div className="flex text-brand-orange">
@@ -216,10 +280,63 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
 
               <h1 className="text-heading-1 text-foreground mb-4 leading-tight">{product.name}</h1>
               <p className="text-body-large text-gray-600 mb-8 leading-relaxed">{product.description}</p>
-              
+
               <div className="text-4xl md:text-5xl font-heading font-bold text-brand-purple mb-8">
-                {formatPrice(product.price)}
+                {formatPrice(displayPrice)}
               </div>
+
+              {/* Variant Types */}
+              {uniqueTypes.length > 0 && (
+                <div className="mb-6 space-y-4">
+                  <h3 className="text-lg font-bold text-gray-900">Select Style</h3>
+                  <div className="flex flex-wrap gap-3">
+                    {uniqueTypes.map((type) => {
+                      const isSelected = actualSelectedType === type
+                      return (
+                        <button
+                          key={type}
+                          onClick={() => handleTypeSelect(type)}
+                          className={`px-5 py-3 rounded-2xl border-2 font-bold text-sm transition-all ${
+                            isSelected
+                              ? 'border-brand-purple bg-purple-50 text-brand-purple shadow-md'
+                              : 'border-gray-200 bg-white text-gray-600 hover:border-brand-purple/50'
+                          }`}
+                        >
+                          {type}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Variant Sizes */}
+              {uniqueSizes.length > 0 && (
+                <div className="mb-8 space-y-4">
+                  <h3 className="text-lg font-bold text-gray-900">Select Size</h3>
+                  <div className="flex flex-wrap gap-3">
+                    {uniqueSizes.map((size) => {
+                      const existsWithCurrentType = availableVariants.some(v => v.size === size && v.type === actualSelectedType)
+                      const isSelected = actualSelectedSize === size
+                      return (
+                        <button
+                          key={size}
+                          onClick={() => handleSizeSelect(size)}
+                          className={`px-5 py-3 rounded-2xl border-2 font-bold text-sm transition-all ${
+                            isSelected
+                              ? 'border-brand-purple bg-purple-50 text-brand-purple shadow-md'
+                              : existsWithCurrentType
+                                ? 'border-gray-200 bg-white text-gray-600 hover:border-brand-purple/50'
+                                : 'border-gray-100 bg-gray-50 text-gray-400 border-dashed opacity-70 hover:border-gray-300'
+                          }`}
+                        >
+                          {size}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
 
               <div className="flex flex-col sm:flex-row gap-4 mb-8">
                 <div className="flex-1 bg-gray-50 rounded-full p-2 flex items-center border-2 border-gray-100">
@@ -272,7 +389,7 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
           </div>
 
           {/* Custom Photo Upload Card */}
-          <motion.div 
+          <motion.div
             whileHover={{ y: -5 }}
             className="bg-gradient-to-br from-brand-pink to-brand-orange p-1 rounded-[2rem] shadow-2xl"
           >
@@ -294,7 +411,7 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
 
       {/* Related Products */}
       {relatedProducts.length > 0 && (
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
@@ -304,11 +421,11 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
             <h2 className="text-heading-1 text-foreground mb-4">You Might Also <span className="text-brand-purple">Love</span></h2>
             <p className="text-body-large text-gray-500">Discover more magical gifts hand-picked just for you.</p>
           </div>
-          
+
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
             {relatedProducts.map((relatedProduct, index) => (
-              <motion.div 
-                key={relatedProduct.id} 
+              <motion.div
+                key={relatedProduct.id}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -344,11 +461,11 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
       {/* Upload Modal (Animated) */}
       <AnimatePresence>
         {showUploadModal && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/40 backdrop-blur-md z-50 flex items-center justify-center p-4"
           >
-            <motion.div 
+            <motion.div
               initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }}
               className="bg-white rounded-[2rem] shadow-2xl max-w-md w-full p-8 relative overflow-hidden"
             >
@@ -367,7 +484,7 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
                     <div className="grid grid-cols-3 gap-2">
                       {uploadedImages.map((url, i) => (
                         <div key={i} className="relative aspect-square mx-auto rounded-xl overflow-hidden shadow-lg border-2 border-white w-full">
-                          <Image src={url} alt={`Uploaded ${i+1}`} fill className="object-cover" />
+                          <Image src={url} alt={`Uploaded ${i + 1}`} fill className="object-cover" />
                           <button
                             type="button"
                             onClick={(e) => {

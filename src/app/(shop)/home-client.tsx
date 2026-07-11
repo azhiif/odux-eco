@@ -18,6 +18,9 @@ import { motion, AnimatePresence, Variants } from 'framer-motion'
 import { Product } from '@/lib/products'
 import { Category } from '@/lib/categories'
 import { Banner } from '@/lib/banners'
+import { db } from '@/lib/firebase'
+import { doc, getDoc } from 'firebase/firestore'
+import { Instagram } from 'lucide-react'
 
 // Framer Motion Variants
 const containerVariants: Variants = {
@@ -41,6 +44,28 @@ interface HomeClientProps {
 
 export default function HomeClient({ categories, featuredProducts, banners }: HomeClientProps) {
   const [currentSlide, setCurrentSlide] = useState(0)
+  const [instagramPosts, setInstagramPosts] = useState<{imageUrl: string, postUrl: string}[]>([])
+  const [reviewWidgetHtml, setReviewWidgetHtml] = useState<string>('')
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const settingsDoc = await getDoc(doc(db, 'settings', 'general'))
+        if (settingsDoc.exists()) {
+          const data = settingsDoc.data()
+          if (data.instagramPosts && Array.isArray(data.instagramPosts)) {
+            setInstagramPosts(data.instagramPosts)
+          }
+          if (data.reviewWidgetHtml) {
+            setReviewWidgetHtml(data.reviewWidgetHtml)
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching instagram posts:', error)
+      }
+    }
+    fetchSettings()
+  }, [])
 
   useEffect(() => {
     if (banners.length > 0) {
@@ -72,13 +97,15 @@ export default function HomeClient({ categories, featuredProducts, banners }: Ho
                   transition={{ duration: 0.8 }}
                   className="w-full h-full relative"
                 >
-                  <Link href={banners[currentSlide].button_link || '/products'} className="block w-full h-full">
+                  <Link href={banners[currentSlide].button_link || '/products'} className="block w-full h-full relative">
                     {/* Mobile Image */}
                     <Image
                       src={banners[currentSlide].mobile_image_url || banners[currentSlide].desktop_image_url}
                       alt={banners[currentSlide].title}
                       fill
                       priority
+                      unoptimized
+                      sizes="100vw"
                       className="md:hidden object-cover"
                     />
                     {/* Desktop Image */}
@@ -87,6 +114,8 @@ export default function HomeClient({ categories, featuredProducts, banners }: Ho
                       alt={banners[currentSlide].title}
                       fill
                       priority
+                      unoptimized
+                      sizes="100vw"
                       className="hidden md:block object-cover"
                     />
                     
@@ -170,7 +199,7 @@ export default function HomeClient({ categories, featuredProducts, banners }: Ho
                   <div className="premium-card p-6 md:p-8 text-center bg-white hover:bg-brand-pink/5 flex flex-col items-center justify-center h-full">
                     <div className="w-20 h-20 md:w-28 md:h-28 rounded-full bg-pink-50 mb-6 flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300 overflow-hidden shadow-inner relative">
                       {category.image_url ? (
-                        <Image src={category.image_url} alt={category.name} fill className="object-cover" sizes="(max-width: 768px) 5rem, 7rem" />
+                        <Image src={category.image_url} alt={category.name} fill unoptimized className="object-cover" sizes="(max-width: 768px) 5rem, 7rem" />
                       ) : (
                         <Gift className="w-10 h-10 md:w-12 md:h-12 text-brand-pink relative z-10" />
                       )}
@@ -319,6 +348,67 @@ export default function HomeClient({ categories, featuredProducts, banners }: Ho
           </motion.div>
         </div>
       </section>
+
+      {/* Customer Reviews Section */}
+      {reviewWidgetHtml && (
+        <section className="py-16 md:py-24 bg-gray-50 relative overflow-hidden">
+          <div className="container-premium text-center mb-10 md:mb-16">
+            <motion.div initial={{ scale: 0.8, opacity: 0 }} whileInView={{ scale: 1, opacity: 1 }} viewport={{ once: true }}>
+              <Star className="w-12 h-12 text-yellow-400 fill-yellow-400 mx-auto mb-4" />
+            </motion.div>
+            <motion.h2 
+              initial={{ y: 20, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.1 }}
+              className="text-heading-2 text-gray-900 mb-4"
+            >
+              What Our Customers Say
+            </motion.h2>
+          </div>
+          <div className="container-premium relative z-10 w-full max-w-6xl mx-auto overflow-hidden">
+            <div dangerouslySetInnerHTML={{ __html: reviewWidgetHtml }} />
+          </div>
+        </section>
+      )}
+
+      {/* Instagram Banner Section */}
+      {instagramPosts.length > 0 && (
+        <section className="bg-white relative overflow-hidden pt-12 md:pt-16 border-t border-gray-100">
+          <div className="text-center mb-10 md:mb-12">
+            <motion.h2 
+              initial={{ y: 20, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.1 }}
+              className="text-3xl md:text-4xl font-heading font-bold text-gray-900 mb-3 flex items-center justify-center gap-3"
+            >
+              <Instagram className="w-8 h-8 md:w-10 md:h-10 text-brand-pink" />
+              Find us on Instagram
+            </motion.h2>
+            <motion.p 
+              initial={{ y: 20, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.2 }}
+              className="text-body-large text-gray-500 font-medium"
+            >
+              @odux.art
+            </motion.p>
+          </div>
+          
+          {/* Full-width Grid Wrapper without spacing */}
+          <div className="w-full">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-0">
+              {instagramPosts.slice(0, 12).map((post, idx) => (
+                <a 
+                  href={post.postUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  key={idx}
+                  className="relative aspect-square group block overflow-hidden bg-gray-100"
+                >
+                  <Image src={post.imageUrl} alt="Instagram Post" fill unoptimized className="object-cover transition-transform duration-700 group-hover:scale-110" />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                    <Instagram className="text-white w-8 h-8 md:w-10 md:h-10 opacity-0 group-hover:opacity-100 transform scale-50 group-hover:scale-100 transition-all duration-300" />
+                  </div>
+                </a>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
     </div>
   )
 }

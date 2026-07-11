@@ -67,7 +67,7 @@ export default function AdminLayout({
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <motion.div 
+          <motion.div
             animate={{ rotate: 360, scale: [1, 1.2, 1] }}
             transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
             className="w-16 h-16 border-4 border-t-brand-pink border-r-brand-orange border-b-brand-purple border-l-brand-blue rounded-full mx-auto mb-6"
@@ -90,6 +90,7 @@ export default function AdminLayout({
     { name: 'Messages', href: '/admin/messages', icon: MessageCircle },
     { name: 'Users', href: '/admin/users', icon: Users },
     { name: 'Banners', href: '/admin/banners', icon: ImageIcon },
+    { name: 'Instagram', href: '/admin/instagram', icon: ImageIcon },
     ...(isSuperAdmin ? [{ name: 'Posts', href: '/admin/posts', icon: FileText }] : []),
     ...(isSuperAdmin ? [{ name: 'SuperAdmin', href: '/admin/superadmin', icon: Shield }] : []),
     { name: 'Settings', href: '/admin/settings', icon: Settings },
@@ -99,7 +100,7 @@ export default function AdminLayout({
     <div className="min-h-screen bg-background flex">
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 z-40 lg:hidden bg-black/20 backdrop-blur-sm"
           onClick={() => setSidebarOpen(false)}
         />
@@ -135,8 +136,8 @@ export default function AdminLayout({
                   href={item.href}
                   className={`
                     group flex items-center px-4 py-3 text-sm font-bold rounded-2xl transition-all
-                    ${isActive 
-                      ? 'bg-purple-50 text-brand-purple shadow-sm border border-purple-100' 
+                    ${isActive
+                      ? 'bg-purple-50 text-brand-purple shadow-sm border border-purple-100'
                       : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
                     }
                   `}
@@ -172,7 +173,7 @@ export default function AdminLayout({
               >
                 <Menu className="h-6 w-6" />
               </button>
-              
+
               <Link href="/" target="_blank" className="text-sm font-bold text-gray-500 hover:text-brand-pink transition-colors">
                 View Storefront &rarr;
               </Link>

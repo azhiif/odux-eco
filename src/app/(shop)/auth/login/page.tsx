@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { db } from '@/lib/firebase'
-import { doc, getDoc, setDoc } from 'firebase/firestore'
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore'
 import { phoneAuthService } from '@/lib/firebase'
 import { Loader2, ArrowLeft, Shield, Mail, Lock, Eye, EyeOff, LogIn, UserPlus, Sparkles, Phone } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -108,14 +108,24 @@ function LoginContent() {
       const profileRef = doc(db, 'user_profiles', user.uid)
       const profileSnap = await getDoc(profileRef)
       
+      const provider = user.providerData?.[0]?.providerId || 'phone'
+
       if (!profileSnap.exists()) {
         await setDoc(profileRef, {
           first_name: user.displayName?.split(' ')[0] || '',
           last_name: user.displayName?.split(' ').slice(1).join(' ') || '',
           email: user.email || '',
           phone: user.phoneNumber || '',
+          provider: provider,
           is_admin: false,
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
+          last_login: new Date().toISOString()
+        })
+      } else {
+        await updateDoc(profileRef, {
+          last_login: new Date().toISOString(),
+          provider: provider,
+          phone: user.phoneNumber || profileSnap.data().phone || ''
         })
       }
     } catch (error: any) {
