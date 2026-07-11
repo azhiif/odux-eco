@@ -59,7 +59,7 @@ interface CartItem {
     image_urls: string[]
     stock_quantity: number
   }
-  custom_image?: string
+  custom_images?: string[]
 }
 
 interface ShippingAddress {
@@ -209,7 +209,7 @@ export default function CheckoutPage() {
           product_id: item.product_id,
           quantity: item.quantity,
           price: item.products.price,
-          custom_image: item.custom_image || null
+          custom_images: item.custom_images || []
         })
       })
       await batch.commit()
@@ -442,7 +442,7 @@ export default function CheckoutPage() {
                   {cartItems.map((item) => (
                     <div key={item.id} className="flex gap-4 items-center bg-white/60 p-3 rounded-2xl backdrop-blur-sm border border-white">
                       <div className="w-16 h-16 rounded-xl overflow-hidden relative shrink-0">
-                        <Image src={item.custom_image || item.products.image_urls[0]} alt={item.products.name} fill className="object-cover" />
+                        <Image src={item.custom_images?.[0] || item.products.image_urls[0]} alt={item.products.name} fill className="object-cover" />
                       </div>
                       <div className="flex-1">
                         <h4 className="font-bold text-gray-800 text-sm line-clamp-1">{item.products.name}</h4>

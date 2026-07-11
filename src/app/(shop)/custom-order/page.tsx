@@ -39,8 +39,8 @@ const InputField = ({ label, icon: Icon, type = 'text', field, placeholder, requ
 )
 
 export default function CustomOrderPage() {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [preview, setPreview] = useState<string>('')
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([])
+  const [previews, setPreviews] = useState<string[]>([])
   const [uploading, setUploading] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
@@ -56,37 +56,48 @@ export default function CustomOrderPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      if (file.type.startsWith('image/')) {
-        setSelectedFile(file)
+    const files = Array.from(event.target.files || [])
+    const validFiles = files.filter(file => file.type.startsWith('image/'))
+    
+    if (validFiles.length !== files.length) {
+      setModalState({
+        isOpen: true,
+        title: 'Invalid File',
+        message: 'Some files were skipped. Please select valid image files (JPG, PNG).',
+        type: 'error'
+      })
+    }
+
+    if (validFiles.length > 0) {
+      setSelectedFiles(prev => [...prev, ...validFiles])
+      
+      const newPreviews = validFiles.map(file => {
         const reader = new FileReader()
-        reader.onloadend = () => setPreview(reader.result as string)
-        reader.readAsDataURL(file)
-      } else {
-        setModalState({
-          isOpen: true,
-          title: 'Invalid File',
-          message: 'Please select a valid image file (JPG, PNG).',
-          type: 'error'
+        return new Promise<string>((resolve) => {
+          reader.onloadend = () => resolve(reader.result as string)
+          reader.readAsDataURL(file)
         })
-      }
+      })
+      
+      Promise.all(newPreviews).then(results => {
+        setPreviews(prev => [...prev, ...results])
+      })
     }
   }
 
-  const removeFile = () => {
-    setSelectedFile(null)
-    setPreview('')
+  const removeFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index))
+    setPreviews(prev => prev.filter((_, i) => i !== index))
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!selectedFile) {
+    if (selectedFiles.length === 0) {
       setModalState({
         isOpen: true,
         title: 'Missing Image',
-        message: 'Please select an image to upload for your custom order.',
+        message: 'Please select at least one image to upload for your custom order.',
         type: 'error'
       })
       return
@@ -94,12 +105,16 @@ export default function CustomOrderPage() {
 
     setUploading(true)
     try {
-      const fileExt = selectedFile.name.split('.').pop() || 'jpg'
-      const fileName = `custom-orders/${Date.now()}.${fileExt}`
-      const storageRef = ref(storage, fileName)
-      
-      await uploadBytes(storageRef, selectedFile)
-      const publicUrl = await getDownloadURL(storageRef)
+      const uploadPromises = selectedFiles.map(async (file) => {
+        const fileExt = file.name.split('.').pop() || 'jpg'
+        const fileName = `custom-orders/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
+        const storageRef = ref(storage, fileName)
+        
+        await uploadBytes(storageRef, file)
+        return await getDownloadURL(storageRef)
+      })
+
+      const publicUrls = await Promise.all(uploadPromises)
 
       // Sanitize all inputs before storing
       const orderData = {
@@ -109,7 +124,7 @@ export default function CustomOrderPage() {
         requirements: sanitizeMessage(formData.requirements),
         size: sanitizeString(formData.size),
         budget: sanitizeString(formData.budget),
-        image_url: publicUrl,
+        image_urls: publicUrls, // Changed to array
         status: 'pending',
         created_at: new Date().toISOString()
       }
@@ -130,7 +145,7 @@ export default function CustomOrderPage() {
               budget: orderData.budget,
               size: orderData.size,
               requirements: orderData.requirements,
-              image_url: publicUrl
+              image_url: publicUrls[0] // just pass first one for notification if needed
             }
           })
         })
@@ -146,7 +161,9 @@ export default function CustomOrderPage() {
       })
       
       setFormData({ name: '', email: '', phone: '', requirements: '', size: '', budget: '' })
-      removeFile()
+      setSelectedFiles([])
+      setPreviews([])
+      if (fileInputRef.current) fileInputRef.current.value = ''
     } catch (error) {
       console.error('Error submitting custom order:', error)
       setModalState({
@@ -190,38 +207,41 @@ export default function CustomOrderPage() {
                 <ImageIcon className="w-6 h-6 mr-2 text-brand-pink" /> 1. Your Photo
               </h2>
               
-              <div 
-                className={`relative rounded-3xl border-4 border-dashed transition-all duration-300 flex flex-col items-center justify-center overflow-hidden
-                  ${preview ? 'border-brand-pink/50 bg-pink-50/30' : 'border-gray-200 bg-gray-50 hover:bg-pink-50 hover:border-brand-pink'}`}
-                style={{ height: '300px' }}
-                onClick={() => !preview && fileInputRef.current?.click()}
-              >
-                <AnimatePresence>
-                  {preview ? (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 w-full h-full">
-                      <Image src={preview} alt="Preview" fill className="object-cover" />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
-                        <Button
-                          type="button"
-                          onClick={(e) => { e.stopPropagation(); removeFile(); }}
-                          className="bg-white text-red-500 hover:bg-red-50 hover:text-red-600 rounded-full px-6 shadow-xl"
-                        >
-                          <X className="h-5 w-5 mr-2" /> Remove
-                        </Button>
-                      </div>
-                    </motion.div>
-                  ) : (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center p-6 cursor-pointer">
-                      <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-lg mb-4 text-brand-pink">
-                        <Upload className="w-8 h-8" />
-                      </div>
-                      <p className="text-gray-600 font-bold mb-2">Tap to upload magic</p>
-                      <p className="text-xs text-gray-400 font-medium px-4">High quality JPG or PNG (Max 10MB)</p>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+              <div className="space-y-4">
+                <div 
+                  className={`relative rounded-3xl border-4 border-dashed transition-all duration-300 flex flex-col items-center justify-center overflow-hidden cursor-pointer
+                    border-gray-200 bg-gray-50 hover:bg-pink-50 hover:border-brand-pink`}
+                  style={{ height: '200px' }}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <div className="flex flex-col items-center p-6">
+                    <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg mb-4 text-brand-pink">
+                      <Upload className="w-8 h-8" />
+                    </div>
+                    <p className="text-gray-600 font-bold mb-2">Tap to upload magic</p>
+                    <p className="text-xs text-gray-400 font-medium px-4">Select one or more images</p>
+                  </div>
+                  <input ref={fileInputRef} type="file" multiple accept="image/*" onChange={handleFileSelect} className="hidden" />
+                </div>
                 
-                <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
+                {previews.length > 0 && (
+                  <div className="grid grid-cols-2 gap-3 mt-4">
+                    {previews.map((previewUrl, index) => (
+                      <motion.div key={index} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="relative aspect-square rounded-2xl overflow-hidden shadow-md group">
+                        <Image src={previewUrl} alt={`Preview ${index + 1}`} fill className="object-cover" />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); removeFile(index); }}
+                            className="bg-white text-red-500 hover:bg-red-50 hover:text-red-600 rounded-full p-2 shadow-xl"
+                          >
+                            <X className="h-5 w-5" />
+                          </button>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>

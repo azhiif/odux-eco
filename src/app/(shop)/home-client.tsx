@@ -105,7 +105,7 @@ export default function HomeClient({ categories, featuredProducts, banners }: Ho
                           initial={{ y: 20, opacity: 0 }}
                           animate={{ y: 0, opacity: 1 }}
                           transition={{ delay: 0.4 }}
-                          className="text-white/90 text-sm md:text-body-large mb-4 md:mb-6 max-w-2xl drop-shadow-md line-clamp-2 md:line-clamp-none"
+                          className="hidden md:block text-white/90 text-sm md:text-body-large mb-4 md:mb-6 max-w-2xl drop-shadow-md line-clamp-2 md:line-clamp-none"
                         >
                           {banners[currentSlide].subtitle}
                         </motion.p>

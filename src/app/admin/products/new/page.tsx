@@ -1,10 +1,10 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { db, storage } from '@/lib/firebase'
-import { collection, query, where, getDocs, addDoc } from 'firebase/firestore'
+import { collection, query, where, getDocs, addDoc, doc, getDoc, updateDoc } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { ArrowLeft, Upload, X, Package } from 'lucide-react'
 import { Modal } from '@/components/ui/modal'
@@ -16,6 +16,9 @@ interface Category {
 
 export default function NewProductPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const productId = searchParams.get('id')
+  
   const [loading, setLoading] = useState(false)
   const [categories, setCategories] = useState<Category[]>([])
   const [uploadedImages, setUploadedImages] = useState<string[]>([])
@@ -38,7 +41,46 @@ export default function NewProductPage() {
 
   useEffect(() => {
     fetchCategories()
-  }, [])
+    if (productId) {
+      fetchProduct()
+    }
+  }, [productId])
+
+  const fetchProduct = async () => {
+    if (!productId) return
+    setLoading(true)
+    try {
+      const docSnap = await getDoc(doc(db, 'products', productId))
+      if (docSnap.exists()) {
+        const data = docSnap.data()
+        setFormData({
+          name: data.name || '',
+          description: data.description || '',
+          price: data.price ? data.price.toString() : '',
+          category_id: data.category_id || '',
+          stock_quantity: data.stock_quantity !== undefined ? data.stock_quantity.toString() : '',
+          dimensions: data.dimensions || '',
+          material: data.material || '',
+          weight: data.weight ? data.weight.toString() : '',
+          sku: data.sku || '',
+          featured: data.featured || false
+        })
+        if (data.image_urls) {
+          setUploadedImages(data.image_urls)
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching product:', error)
+      setModalState({
+        isOpen: true,
+        title: 'Error',
+        message: 'Could not load product data',
+        type: 'error'
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const fetchCategories = async () => {
     try {
@@ -110,25 +152,31 @@ export default function NewProductPage() {
         description: formData.description,
         price: parseFloat(formData.price),
         category_id: formData.category_id,
-        stock_quantity: parseInt(formData.stock_quantity) || 0,
+        stock_quantity: parseInt(formData.stock_quantity as string) || 0,
         dimensions: formData.dimensions,
         material: formData.material,
-        weight: formData.weight ? parseFloat(formData.weight) : null,
+        weight: formData.weight ? parseFloat(formData.weight as string) : null,
         sku: formData.sku,
         image_urls: uploadedImages,
         featured: formData.featured,
         is_active: true,
-        created_at: new Date().toISOString()
+        ...(productId ? {} : { created_at: new Date().toISOString() }),
+        updated_at: new Date().toISOString()
       }
 
-      await addDoc(collection(db, 'products'), productData)
+      if (productId) {
+        await updateDoc(doc(db, 'products', productId), productData)
+      } else {
+        await addDoc(collection(db, 'products'), productData)
+      }
+      
       router.push('/admin/products')
     } catch (error) {
-      console.error('Error creating product:', error)
+      console.error('Error saving product:', error)
       setModalState({
         isOpen: true,
         title: 'Error',
-        message: 'Error creating product. Please try again.',
+        message: 'Error saving product. Please try again.',
         type: 'error'
       })
     } finally {
@@ -145,9 +193,9 @@ export default function NewProductPage() {
         </Link>
         <h1 className="text-display text-gray-900 mb-2 flex items-center">
           <Package className="h-8 w-8 mr-3 text-brand-purple" />
-          Add New Product
+          {productId ? 'Edit Product' : 'Add New Product'}
         </h1>
-        <p className="text-gray-500 font-medium">Create a new magical product for your store</p>
+        <p className="text-gray-500 font-medium">{productId ? 'Update your magical product' : 'Create a new magical product for your store'}</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
@@ -342,7 +390,7 @@ export default function NewProductPage() {
             disabled={loading}
             className="bg-brand-purple hover:bg-purple-700 text-white px-8 py-3 rounded-full font-bold shadow-md hover:shadow-lg transition-all"
           >
-            {loading ? 'Creating...' : 'Create Product'}
+            {loading ? (productId ? 'Updating...' : 'Creating...') : (productId ? 'Update Product' : 'Create Product')}
           </button>
         </div>
       </form>

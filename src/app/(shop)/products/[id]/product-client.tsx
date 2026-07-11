@@ -23,7 +23,7 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
   const router = useRouter()
   const [selectedImage, setSelectedImage] = useState(0)
   const [quantity, setQuantity] = useState(1)
-  const [uploadedImage, setUploadedImage] = useState<string | null>(null)
+  const [uploadedImages, setUploadedImages] = useState<string[]>([])
   const [uploading, setUploading] = useState(false)
   const [showUploadModal, setShowUploadModal] = useState(false)
   const [modalState, setModalState] = useState<{isOpen: boolean, title: string, message: string, type: 'error'|'success'|'info'}>({
@@ -31,28 +31,19 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
   })
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-
-    if (!file.type.startsWith('image/')) {
+    const files = Array.from(event.target.files || [])
+    const validFiles = files.filter(file => file.type.startsWith('image/'))
+    
+    if (validFiles.length !== files.length) {
       setModalState({
         isOpen: true,
         title: 'Invalid File',
-        message: 'Please upload an image file (JPG, PNG).',
+        message: 'Some files were skipped. Please select valid image files (JPG, PNG).',
         type: 'error'
       })
-      return
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      setModalState({
-        isOpen: true,
-        title: 'File Too Large',
-        message: 'Image size should be less than 5MB.',
-        type: 'error'
-      })
-      return
-    }
+    if (validFiles.length === 0) return
 
     setUploading(true)
     try {
@@ -67,19 +58,21 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
         return
       }
 
-      const fileName = `${Date.now()}_${file.name}`
-      const storageRef = ref(storage, `custom_images/${user.uid}/${fileName}`)
+      const uploadPromises = validFiles.map(async (file) => {
+        const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}_${file.name}`
+        const storageRef = ref(storage, `custom_images/${user.uid}/${fileName}`)
+        await uploadBytes(storageRef, file)
+        return await getDownloadURL(storageRef)
+      })
       
-      await uploadBytes(storageRef, file)
-      const downloadURL = await getDownloadURL(storageRef)
-      
-      setUploadedImage(downloadURL)
+      const downloadURLs = await Promise.all(uploadPromises)
+      setUploadedImages(prev => [...prev, ...downloadURLs])
     } catch (error) {
-      console.error('Error uploading image:', error)
+      console.error('Error uploading images:', error)
       setModalState({
         isOpen: true,
         title: 'Upload Failed',
-        message: 'Failed to upload image. Please try again.',
+        message: 'Failed to upload images. Please try again.',
         type: 'error'
       })
     } finally {
@@ -104,7 +97,7 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
         user_id: user.uid,
         product_id: product.id,
         quantity: quantity,
-        custom_image: uploadedImage
+        custom_images: uploadedImages
       })
 
       try {
@@ -113,7 +106,7 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
             type: 'ADD_TO_CART', 
-            data: { product_id: product.id, quantity, custom_image: uploadedImage } 
+            data: { product_id: product.id, quantity, custom_images: uploadedImages } 
           })
         })
       } catch (notifyErr) {
@@ -123,11 +116,11 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
       setModalState({
         isOpen: true,
         title: 'Added to Cart!',
-        message: uploadedImage ? 'Product added to cart with your custom photo! 🎁' : 'Product added to cart!',
+        message: uploadedImages.length > 0 ? 'Product added to cart with your custom photos! 🎁' : 'Product added to cart!',
         type: 'success'
       })
 
-      setUploadedImage(null)
+      setUploadedImages([])
       setShowUploadModal(false)
     } catch (error) {
       console.error('Error adding to cart:', error)
@@ -369,20 +362,40 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
 
               {/* Upload Area */}
               <div className="border-4 border-dashed border-pink-100 rounded-2xl p-8 text-center mb-8 bg-gray-50 transition-colors hover:bg-pink-50/50 hover:border-pink-200">
-                {uploadedImage ? (
+                {uploadedImages.length > 0 ? (
                   <div className="space-y-4">
-                    <div className="relative w-32 h-32 mx-auto rounded-xl overflow-hidden shadow-lg border-2 border-white">
-                      <Image src={uploadedImage} alt="Uploaded" fill className="object-cover" />
+                    <div className="grid grid-cols-3 gap-2">
+                      {uploadedImages.map((url, i) => (
+                        <div key={i} className="relative aspect-square mx-auto rounded-xl overflow-hidden shadow-lg border-2 border-white w-full">
+                          <Image src={url} alt={`Uploaded ${i+1}`} fill className="object-cover" />
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setUploadedImages(prev => prev.filter((_, index) => index !== i));
+                            }}
+                            className="absolute top-1 right-1 bg-white/90 text-red-500 rounded-full p-1 hover:bg-red-500 hover:text-white transition-colors shadow-sm"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ))}
                     </div>
                     <p className="text-green-600 font-bold">✨ Magic Captured!</p>
+                    <div className="pt-2 border-t border-gray-200">
+                      <input type="file" multiple accept="image/*" onChange={handleImageUpload} className="hidden" id="add-more-upload" />
+                      <label htmlFor="add-more-upload" className="inline-block px-4 py-2 bg-white border-2 border-gray-200 rounded-full font-bold text-gray-600 cursor-pointer hover:border-brand-pink hover:text-brand-pink transition-all shadow-sm text-sm">
+                        {uploading ? 'Uploading...' : '+ Add More Photos'}
+                      </label>
+                    </div>
                   </div>
                 ) : (
                   <div className="space-y-4">
                     <Upload className="h-12 w-12 text-gray-300 mx-auto" />
-                    <p className="text-gray-500 font-medium">Click to choose a photo</p>
-                    <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" id="file-upload" />
+                    <p className="text-gray-500 font-medium">Click to choose photos</p>
+                    <input type="file" multiple accept="image/*" onChange={handleImageUpload} className="hidden" id="file-upload" />
                     <label htmlFor="file-upload" className="inline-block px-6 py-3 bg-white border-2 border-gray-200 rounded-full font-bold text-gray-600 cursor-pointer hover:border-brand-pink hover:text-brand-pink transition-all shadow-sm">
-                      {uploading ? 'Uploading magic...' : 'Choose Photo'}
+                      {uploading ? 'Uploading magic...' : 'Choose Photos'}
                     </label>
                   </div>
                 )}
@@ -393,7 +406,7 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
                 <Button onClick={() => setShowUploadModal(false)} variant="outline" className="flex-1 rounded-full py-6 text-gray-500 border-2">
                   Cancel
                 </Button>
-                {uploadedImage && (
+                {uploadedImages.length > 0 && (
                   <Button onClick={() => { setShowUploadModal(false); addToCart(); }} className="flex-1 btn-premium-gold py-6 rounded-full">
                     <Gift className="h-4 w-4 mr-2" />
                     Add to Cart
