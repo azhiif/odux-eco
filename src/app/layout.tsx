@@ -112,6 +112,9 @@ export default function RootLayout({
         {process.env.NEXT_PUBLIC_GA_ID && (
           <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
         )}
+
+        {/* Vercel Analytics */}
+        <Analytics />
       </body>
     </html>
   );
