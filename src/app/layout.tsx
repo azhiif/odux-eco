@@ -80,6 +80,7 @@ export const metadata: Metadata = {
 };
 
 import { GoogleAnalytics } from '@next/third-parties/google'
+import { Analytics } from '@vercel/analytics/react'
 
 export default function RootLayout({
   children,
