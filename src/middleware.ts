@@ -5,6 +5,14 @@ import type { NextRequest } from 'next/server'
 const rateLimit = new Map<string, { count: number; resetTime: number }>()
 
 export function middleware(request: NextRequest) {
+  const url = request.nextUrl
+  
+  // Redirect .html URLs to clean URLs
+  if (url.pathname.endsWith('.html')) {
+    const cleanPath = url.pathname.replace(/\.html$/, '')
+    return NextResponse.redirect(new URL(cleanPath, request.url), 301)
+  }
+
   const response = NextResponse.next()
   const ip = request.headers.get('x-forwarded-for') || 
              request.headers.get('x-real-ip') || 

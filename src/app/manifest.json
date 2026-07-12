@@ -1,0 +1,16 @@
+{
+  "name": "Odux Art - Custom Art Frames & Personalized Gifts",
+  "short_name": "Odux Art",
+  "description": "Transform your precious memories into stunning custom art frames. Perfect for birthdays, weddings, anniversaries, and special occasions.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fffbfb",
+  "theme_color": "#ff477e",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "any",
+      "type": "image/x-icon"
+    }
+  ]
+}

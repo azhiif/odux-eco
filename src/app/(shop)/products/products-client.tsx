@@ -188,11 +188,6 @@ export default function ProductsClient({ initialProducts, categories }: Products
                         )}
                         
                         {/* Badges */}
-                        {product.featured && (
-                          <div className="absolute top-4 left-4 bg-brand-orange text-white px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg flex items-center z-10">
-                            <Star className="w-3 h-3 mr-1" fill="currentColor" /> Featured
-                          </div>
-                        )}
                         {product.stock_quantity <= 5 && product.stock_quantity > 0 && (
                           <div className="absolute top-4 right-4 bg-red-500 text-white px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg z-10">
                             Only {product.stock_quantity} left

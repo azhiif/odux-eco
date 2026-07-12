@@ -222,11 +222,6 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
                 <Camera className="h-16 w-16 text-gray-300" />
               </div>
             )}
-            {product.featured && (
-              <div className="absolute top-6 left-6 bg-brand-orange text-white px-4 py-2 rounded-full text-sm font-bold uppercase tracking-wider shadow-lg flex items-center z-10">
-                <Star className="w-4 h-4 mr-2" fill="currentColor" /> Bestseller
-              </div>
-            )}
           </div>
 
           {/* Thumbnails */}
