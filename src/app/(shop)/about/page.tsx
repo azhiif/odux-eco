@@ -149,8 +149,7 @@ export default function AboutPage() {
             {[
               { num: '5000+', label: 'Happy Customers', color: 'pink' },
               { num: '10000+', label: 'Art Pieces', color: 'purple' },
-              { num: '50+', label: 'Cities Delivered', color: 'orange' },
-              { num: '4.9★', label: 'Customer Rating', color: 'blue' }
+              { num: '50+', label: 'Cities Delivered', color: 'orange' }
             ].map((stat, i) => (
               <div key={i} className="bg-white p-8 rounded-[2rem] border-2 border-gray-100 shadow-sm hover:border-brand-pink transition-colors">
                 <div className={`text-4xl lg:text-5xl font-heading font-bold text-brand-${stat.color} mb-2`}>{stat.num}</div>

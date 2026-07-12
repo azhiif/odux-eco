@@ -4,7 +4,7 @@ import type { NextRequest } from 'next/server'
 // Rate limiting store (in production, use Redis or database)
 const rateLimit = new Map<string, { count: number; resetTime: number }>()
 
-export function middleware(request: NextRequest) {
+export default function proxy(request: NextRequest) {
   const url = request.nextUrl
   
   // Redirect .html URLs to clean URLs

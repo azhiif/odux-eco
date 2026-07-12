@@ -45,9 +45,11 @@ export default function CategoriesPage() {
 
   const fetchCategories = async () => {
     try {
-      const q = query(collection(db, 'categories'), orderBy('sort_order', 'asc'))
+      const q = query(collection(db, 'categories'))
       const snapshot = await getDocs(q)
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Category))
+      // Sort client-side to handle categories without sort_order
+      data.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
       setCategories(data)
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
@@ -207,12 +209,6 @@ export default function CategoriesPage() {
           </h1>
           <p className="text-gray-500 font-medium">Organize your product categories</p>
         </div>
-        <Link href="/admin/categories/new">
-          <button className="bg-gradient-to-r from-brand-orange to-brand-pink text-white px-6 py-3 rounded-full font-bold flex items-center shadow-lg hover:shadow-xl transition-all hover:scale-105">
-            <Plus className="h-5 w-5 mr-2" />
-            Advanced Setup
-          </button>
-        </Link>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

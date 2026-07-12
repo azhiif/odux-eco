@@ -268,11 +268,6 @@ export default function HomeClient({ categories, featuredProducts, banners }: Ho
                           <Camera className="w-12 h-12 text-gray-300" />
                         </div>
                       )}
-                      {product.featured && (
-                        <div className="absolute top-4 left-4 bg-brand-orange text-white px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg flex items-center z-10">
-                          <Star className="w-3 h-3 mr-1" fill="currentColor" /> Bestseller
-                        </div>
-                      )}
                       {/* Quick Add Overlay */}
                       <div className="absolute inset-x-0 bottom-0 p-4 opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 flex justify-center bg-gradient-to-t from-black/50 to-transparent z-20">
                         <Button 
@@ -295,10 +290,6 @@ export default function HomeClient({ categories, featuredProducts, banners }: Ho
                         <p className="font-heading text-xl font-bold text-foreground">
                           {formatPrice(product.price)}
                         </p>
-                        <div className="flex items-center bg-pink-50 px-2 py-1 rounded-md text-brand-pink">
-                          <Star className="w-3.5 h-3.5 mr-1" fill="currentColor" />
-                          <span className="text-sm font-bold">4.9</span>
-                        </div>
                       </div>
                     </div>
                   </article>

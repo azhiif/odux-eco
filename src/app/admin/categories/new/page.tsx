@@ -15,7 +15,8 @@ export default function NewCategoryPage() {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    slug: ''
+    slug: '',
+    sort_order: 0
   })
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -73,6 +74,7 @@ export default function NewCategoryPage() {
         slug: formData.slug,
         image_url: uploadedImage || null,
         is_active: true,
+        sort_order: formData.sort_order || 0,
         created_at: new Date().toISOString()
       }
 

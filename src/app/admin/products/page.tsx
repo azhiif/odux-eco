@@ -162,11 +162,6 @@ export default function AdminProductsPage() {
                         }`}>
                           {product.is_active ? 'Active' : 'Inactive'}
                         </span>
-                        {product.featured && (
-                          <span className="px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-full bg-yellow-50 text-yellow-700 border border-yellow-200">
-                            Featured
-                          </span>
-                        )}
                       </div>
                     </td>
                     <td className="p-4 text-right">

@@ -47,11 +47,6 @@ export function generateProductSchema(product: any) {
         url: 'https://oduxart.com',
       },
     },
-    aggregateRating: {
-      '@type': 'AggregateRating',
-      ratingValue: '4.8',
-      reviewCount: '150',
-    },
   }
 }
 

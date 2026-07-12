@@ -258,15 +258,6 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-brand-pink/10 to-transparent rounded-bl-full z-0"></div>
 
             <div className="relative z-10">
-              <div className="flex items-center mb-4 space-x-2">
-                <div className="flex text-brand-orange">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className={`h-5 w-5 ${i < 4 ? 'fill-current' : 'text-gray-200'}`} />
-                  ))}
-                </div>
-                <span className="text-gray-500 font-bold">(4.9)</span>
-              </div>
-
               <h1 className="text-heading-1 text-foreground mb-4 leading-tight">{product.name}</h1>
               <p className="text-body-large text-gray-600 mb-8 leading-relaxed">{product.description}</p>
 
