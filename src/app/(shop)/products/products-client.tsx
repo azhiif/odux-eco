@@ -33,6 +33,13 @@ export default function ProductsClient({ initialProducts, categories }: Products
   const [sortBy, setSortBy] = useState<string>('name')
   const [currentPage, setCurrentPage] = useState(1)
 
+  // Debug: Log first product to check MRP and on_sale values
+  useEffect(() => {
+    if (initialProducts.length > 0) {
+      console.log('First product data:', initialProducts[0])
+    }
+  }, [initialProducts])
+
   const productsPerPage = 12
 
   // Filter and Sort in memory since we have all active products
@@ -188,8 +195,13 @@ export default function ProductsClient({ initialProducts, categories }: Products
                         )}
                         
                         {/* Badges */}
-                        {product.stock_quantity <= 5 && product.stock_quantity > 0 && (
-                          <div className="absolute top-4 right-4 bg-red-500 text-white px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg z-10">
+                        {product.on_sale && (
+                          <div className="absolute top-3 right-3 bg-red-500 text-white px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-lg z-10">
+                            Sale
+                          </div>
+                        )}
+                        {!product.on_sale && product.stock_quantity <= 5 && product.stock_quantity > 0 && (
+                          <div className="absolute top-4 right-4 bg-orange-500 text-white px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg z-10">
                             Only {product.stock_quantity} left
                           </div>
                         )}
@@ -230,9 +242,22 @@ export default function ProductsClient({ initialProducts, categories }: Products
                         </p>
                         
                         <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-100">
-                          <p className="font-heading text-xl font-bold text-foreground">
-                            {formatPrice(product.price)}
-                          </p>
+                          <div className="flex flex-col">
+                            {product.mrp && product.mrp > product.price ? (
+                              <div className="flex items-baseline gap-2">
+                                <span className="text-sm font-bold text-gray-400 line-through">
+                                  {formatPrice(product.mrp)}
+                                </span>
+                                <span className="font-heading text-xl font-bold text-foreground">
+                                  {formatPrice(product.price)}
+                                </span>
+                              </div>
+                            ) : (
+                              <p className="font-heading text-xl font-bold text-foreground">
+                                {formatPrice(product.price)}
+                              </p>
+                            )}
+                          </div>
                           {/* Mobile quick add button */}
                           <button 
                             className="md:hidden w-10 h-10 rounded-full bg-pink-50 text-brand-pink flex items-center justify-center hover:bg-brand-pink hover:text-white transition-colors"

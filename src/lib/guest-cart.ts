@@ -5,7 +5,7 @@ export function getGuestCart() {
   try {
     const cart = localStorage.getItem(GUEST_CART_KEY)
     return cart ? JSON.parse(cart) : []
-  } catch (e) {
+  } catch {
     return []
   }
 }

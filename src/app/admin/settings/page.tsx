@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { auth, db } from '@/lib/firebase'
+import { db } from '@/lib/firebase'
 import { doc, getDoc, updateDoc } from 'firebase/firestore'
 import { Settings, Save, Loader2, Shield, Bell, Palette, Globe, Mail, Phone, Instagram, Facebook } from 'lucide-react'
 import { motion } from 'framer-motion'

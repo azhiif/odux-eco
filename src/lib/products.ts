@@ -1,5 +1,5 @@
 import { db } from './firebase'
-import { collection, query, where, getDocs, doc, getDoc, limit, orderBy } from 'firebase/firestore'
+import { collection, query, where, getDocs, doc, getDoc, limit } from 'firebase/firestore'
 import { serializeDoc } from './firebase-utils'
 
 export interface ProductVariant {
@@ -17,6 +17,8 @@ export interface Product {
   name: string
   description: string
   price: number
+  mrp?: number
+  on_sale?: boolean
   image_urls: string[]
   category_id: string
   featured: boolean

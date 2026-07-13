@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo, useEffect } from 'react'
+import React, { useState, useMemo, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -9,8 +9,8 @@ import { db, auth, storage } from '@/lib/firebase'
 import { collection, addDoc } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { formatPrice } from '@/lib/utils'
-import { ShoppingCart, Heart, Share2, Star, Upload, Camera, Gift, Sparkles, ChevronLeft, X } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { ShoppingCart, Heart, Share2, Star, Upload, Camera, Gift, Sparkles, ChevronLeft, X, ChevronLeft as ChevronLeftIcon, ChevronRight } from 'lucide-react'
+import { motion, AnimatePresence, PanInfo } from 'framer-motion'
 import { Modal } from '@/components/ui/modal'
 import { Product, ProductVariant } from '@/lib/products'
 
@@ -54,13 +54,24 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
     setSelectedImage(index)
   }
 
+  const handleSwipe = (event: PanInfo) => {
+    const threshold = 50
+    if (event.offset.x < -threshold && selectedImage < galleryImages.length - 1) {
+      setSelectedImage(selectedImage + 1)
+    } else if (event.offset.x > threshold && selectedImage > 0) {
+      setSelectedImage(selectedImage - 1)
+    }
+  }
+
   const handleTypeSelect = (type: string) => {
     let newVariant = availableVariants.find(v => v.type === type && v.size === actualSelectedSize)
     if (!newVariant) newVariant = availableVariants.find(v => v.type === type)
     if (newVariant) {
       setSelectedVariant(newVariant)
+      // Find the index of the first image of this variant in the gallery
       if (newVariant.images && newVariant.images.length > 0) {
-        setSelectedImage(0)
+        const firstVariantImageIndex = galleryImages.findIndex(img => newVariant.images?.includes(img))
+        setSelectedImage(firstVariantImageIndex >= 0 ? firstVariantImageIndex : 0)
       }
     }
   }
@@ -70,8 +81,10 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
     if (!newVariant) newVariant = availableVariants.find(v => v.size === size)
     if (newVariant) {
       setSelectedVariant(newVariant)
+      // Find the index of the first image of this variant in the gallery
       if (newVariant.images && newVariant.images.length > 0) {
-        setSelectedImage(0)
+        const firstVariantImageIndex = galleryImages.findIndex(img => newVariant.images?.includes(img))
+        setSelectedImage(firstVariantImageIndex >= 0 ? firstVariantImageIndex : 0)
       }
     }
   }
@@ -208,19 +221,48 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
         {/* Product Gallery */}
         <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
           <div className="relative aspect-square bg-white rounded-[2rem] md:rounded-[3rem] shadow-2xl shadow-brand-pink/10 overflow-hidden border-4 border-white">
-            {galleryImages?.[selectedImage] ? (
-              <Image
-                src={galleryImages[selectedImage]}
-                alt={product.name}
-                fill
-                sizes="(max-width: 1024px) 100vw, 50vw"
-                className="object-cover transition-transform duration-700 hover:scale-105"
-                priority
-              />
-            ) : (
-              <div className="w-full h-full bg-gray-50 flex items-center justify-center">
-                <Camera className="h-16 w-16 text-gray-300" />
-              </div>
+            <motion.div
+              className="relative w-full h-full cursor-grab active:cursor-grabbing"
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.1}
+              onDragEnd={(_, info) => handleSwipe(info)}
+            >
+              {galleryImages?.[selectedImage] ? (
+                <Image
+                  src={galleryImages[selectedImage]}
+                  alt={product.name}
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="object-cover transition-transform duration-700 hover:scale-105"
+                  priority
+                  draggable={false}
+                />
+              ) : (
+                <div className="w-full h-full bg-gray-50 flex items-center justify-center">
+                  <Camera className="h-16 w-16 text-gray-300" />
+                </div>
+              )}
+            </motion.div>
+
+            {/* Navigation Arrows */}
+            {galleryImages && galleryImages.length > 1 && (
+              <>
+                <button
+                  onClick={() => setSelectedImage(Math.max(0, selectedImage - 1))}
+                  disabled={selectedImage === 0}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-all disabled:opacity-30 disabled:cursor-not-allowed z-20"
+                >
+                  <ChevronLeftIcon className="w-6 h-6 text-gray-800" />
+                </button>
+                <button
+                  onClick={() => setSelectedImage(Math.min(galleryImages.length - 1, selectedImage + 1))}
+                  disabled={selectedImage === galleryImages.length - 1}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-all disabled:opacity-30 disabled:cursor-not-allowed z-20"
+                >
+                  <ChevronRight className="w-6 h-6 text-gray-800" />
+                </button>
+              </>
             )}
           </div>
 
@@ -245,6 +287,10 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
                     sizes="96px"
                     className="object-cover"
                   />
+                  {/* Show indicator if this is a variant image */}
+                  {selectedVariant?.images?.includes(url) && (
+                    <div className="absolute bottom-1 right-1 w-3 h-3 bg-brand-purple rounded-full border-2 border-white" />
+                  )}
                 </motion.button>
               ))}
             </div>
@@ -261,8 +307,24 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
               <h1 className="text-heading-1 text-foreground mb-4 leading-tight">{product.name}</h1>
               <p className="text-body-large text-gray-600 mb-8 leading-relaxed">{product.description}</p>
 
-              <div className="text-4xl md:text-5xl font-heading font-bold text-brand-purple mb-8">
-                {formatPrice(displayPrice)}
+              <div className="mb-8">
+                {product.mrp && product.mrp > displayPrice ? (
+                  <div className="flex items-baseline gap-3">
+                    <span className="text-2xl md:text-3xl font-heading font-bold text-gray-400 line-through">
+                      {formatPrice(product.mrp)}
+                    </span>
+                    <span className="text-4xl md:text-5xl font-heading font-bold text-brand-purple">
+                      {formatPrice(displayPrice)}
+                    </span>
+                    <span className="text-sm font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                      {Math.round(((product.mrp - displayPrice) / product.mrp) * 100)}% OFF
+                    </span>
+                  </div>
+                ) : (
+                  <div className="text-4xl md:text-5xl font-heading font-bold text-brand-purple">
+                    {formatPrice(displayPrice)}
+                  </div>
+                )}
               </div>
 
               {/* Variant Types */}

@@ -93,8 +93,8 @@ export default function OrdersPage() {
       setLoading(true)
       
       // 1. Fetch Regular Orders
-      let ordersRef = collection(db, 'orders')
-      let q = query(ordersRef, orderBy('created_at', 'desc'))
+      const ordersRef = collection(db, 'orders')
+      const q = query(ordersRef, orderBy('created_at', 'desc'))
       const ordersSnap = await getDocs(q)
       
       const regularOrdersData = await Promise.all(ordersSnap.docs.map(async (orderDoc) => {
@@ -140,8 +140,8 @@ export default function OrdersPage() {
       }))
 
       // 2. Fetch Custom Orders
-      let customOrdersRef = collection(db, 'custom_orders')
-      let qCustom = query(customOrdersRef, orderBy('created_at', 'desc'))
+      const customOrdersRef = collection(db, 'custom_orders')
+      const qCustom = query(customOrdersRef, orderBy('created_at', 'desc'))
       const customOrdersSnap = await getDocs(qCustom)
       
       const customOrdersData = customOrdersSnap.docs.map((doc) => {

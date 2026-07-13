@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { Mail, Phone, MapPin, Instagram, MessageCircle } from 'lucide-react'
+import Image from 'next/image'
+import { Phone, MapPin, Instagram, MessageCircle } from 'lucide-react'
 
 export default function Footer() {
   return (
@@ -9,9 +10,11 @@ export default function Footer() {
           {/* Company Info */}
           <div className="lg:col-span-1">
             <div className="mb-6">
-              <img 
+              <Image 
                 src="https://iili.io/FP5RC4R.png" 
                 alt="Odux Art Logo" 
+                width={40}
+                height={40}
                 className="h-10 mb-4 brightness-0 opacity-80" 
               />
             </div>
@@ -138,7 +141,60 @@ export default function Footer() {
           </div>
         </div>
 
+        {/* Payment Methods */}
         <div className="border-t border-gray-200 mt-12 pt-8">
+          <div className="text-center mb-6">
+            <div className="flex flex-wrap justify-center items-center gap-6 md:gap-8">
+              {/* Visa */}
+              <Image 
+                src="/logo-images/1156753_finance_payment_visa_icon_25c23e60-2c92-4ebc-955c-d5396fb065f7.webp" 
+                alt="Visa" 
+                width={48} 
+                height={32} 
+                className="h-8 w-auto opacity-70 hover:opacity-100 transition-opacity"
+                style={{ width: 'auto' }}
+              />
+              {/* Mastercard */}
+              <Image 
+                src="/logo-images/1156750_finance_mastercard_payment_icon_538ef9fa-b721-4683-a37f-173c4754ed91.webp" 
+                alt="Mastercard" 
+                width={48} 
+                height={32} 
+                className="h-8 w-auto opacity-70 hover:opacity-100 transition-opacity"
+                style={{ width: 'auto' }}
+              />
+              {/* Paytm */}
+              <Image 
+                src="/logo-images/1220356_paytm_icon_a966a30b-1c6f-4287-9c69-7d2a3d0ce79c.webp" 
+                alt="Paytm" 
+                width={48} 
+                height={32} 
+                className="h-8 w-auto opacity-70 hover:opacity-100 transition-opacity"
+                style={{ width: 'auto' }}
+              />
+              {/* UPI */}
+              <Image 
+                src="/logo-images/pngegg_1.webp" 
+                alt="UPI" 
+                width={48} 
+                height={32} 
+                className="h-8 w-auto opacity-70 hover:opacity-100 transition-opacity"
+                style={{ width: 'auto' }}
+              />
+              {/* GPay */}
+              <Image 
+                src="/logo-images/7123945_logo_pay_google_gpay_icon_18a97b47-ae74-4f27-a684-a2dbd371c304.webp" 
+                alt="Google Pay" 
+                width={48} 
+                height={32} 
+                className="h-8 w-auto opacity-70 hover:opacity-100 transition-opacity"
+                style={{ width: 'auto' }}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-gray-200 mt-8 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <p className="text-body-small text-gray-600 text-center md:text-left">
               &copy; {new Date().getFullYear()} Odux Art. All rights reserved.

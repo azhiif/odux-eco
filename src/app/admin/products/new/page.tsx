@@ -29,13 +29,15 @@ export default function NewProductPage() {
     name: '',
     description: '',
     price: '',
+    mrp: '',
     category_id: '',
     stock_quantity: '',
     dimensions: '',
     material: '',
     weight: '',
     sku: '',
-    featured: false
+    featured: false,
+    on_sale: false
   })
   const [modalState, setModalState] = useState<{isOpen: boolean, title: string, message: string, type: 'error'|'success'|'info'}>({
     isOpen: false, title: '', message: '', type: 'info'
@@ -60,13 +62,15 @@ export default function NewProductPage() {
           name: data.name || '',
           description: data.description || '',
           price: data.price ? data.price.toString() : '',
+          mrp: data.mrp ? data.mrp.toString() : '',
           category_id: data.category_id || '',
           stock_quantity: data.stock_quantity !== undefined ? data.stock_quantity.toString() : '',
           dimensions: data.dimensions || '',
           material: data.material || '',
           weight: data.weight ? data.weight.toString() : '',
           sku: data.sku || '',
-          featured: data.featured || false
+          featured: data.featured || false,
+          on_sale: data.on_sale || false
         })
         if (data.image_urls) {
           setUploadedImages(data.image_urls)
@@ -209,6 +213,8 @@ export default function NewProductPage() {
         name: formData.name,
         description: formData.description,
         price: parseFloat(formData.price),
+        mrp: formData.mrp ? parseFloat(formData.mrp) : null,
+        on_sale: formData.on_sale,
         category_id: formData.category_id,
         stock_quantity: parseInt(formData.stock_quantity as string) || 0,
         dimensions: formData.dimensions,
@@ -304,9 +310,9 @@ export default function NewProductPage() {
         {/* Pricing & Inventory */}
         <div className="premium-card bg-white p-8">
           <h2 className="text-heading-3 text-gray-900 mb-6">Pricing & Inventory</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Price (₹) *</label>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Selling Price (₹) *</label>
               <input
                 type="number"
                 required min="0" step="0.01"
@@ -315,6 +321,18 @@ export default function NewProductPage() {
                 className="form-input"
                 placeholder="0.00"
               />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">MRP (₹) - Optional</label>
+              <input
+                type="number"
+                min="0" step="0.01"
+                value={formData.mrp}
+                onChange={(e) => setFormData({...formData, mrp: e.target.value})}
+                className="form-input"
+                placeholder="0.00"
+              />
+              <p className="text-xs text-gray-500 mt-1">Leave empty if same as selling price</p>
             </div>
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">Stock Quantity</label>
@@ -337,6 +355,18 @@ export default function NewProductPage() {
                 placeholder="SKU-123"
               />
             </div>
+          </div>
+          <div className="mt-6 flex items-center bg-red-50 p-4 rounded-2xl border border-red-100">
+            <input
+              type="checkbox"
+              id="on_sale"
+              checked={formData.on_sale}
+              onChange={(e) => setFormData({...formData, on_sale: e.target.checked})}
+              className="w-5 h-5 text-red-600 rounded border-gray-300 focus:ring-red-600 mr-3"
+            />
+            <label htmlFor="on_sale" className="text-sm font-bold text-red-800">
+              On Sale (Shows "Sale" tag on product cards)
+            </label>
           </div>
         </div>
 

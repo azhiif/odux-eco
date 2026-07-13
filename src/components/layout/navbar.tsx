@@ -2,6 +2,7 @@
 
 import React from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useState } from 'react'
 import { Menu, X, ShoppingCart, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -61,9 +62,11 @@ export default function Navbar() {
     <nav className={`fixed w-full z-50 top-0 transition-all duration-300 ${isScrolled ? 'bg-black/95 backdrop-blur-md shadow-lg pt-1' : 'bg-black shadow-sm pt-4 md:pt-6'}`}>
       <div className="container-premium pb-3 pt-2 md:pt-3 md:pb-4 flex justify-between items-center">
         <Link href="/" className="flex items-center group">
-          <img 
+          <Image 
             src="https://iili.io/FP5RC4R.png" 
             alt="Odux Art Logo" 
+            width={64}
+            height={64}
             className="h-12 md:h-16 transition-transform duration-300 group-hover:scale-105" 
           />
         </Link>

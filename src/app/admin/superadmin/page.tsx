@@ -53,7 +53,7 @@ export default function SuperAdminPage() {
       await makeUserSuperAdmin(uid)
       await fetchSuperAdmins()
       await fetchUsers()
-    } catch (error) {
+    } catch {
       alert('Error making user superadmin')
     } finally {
       setActionLoading(null)
@@ -68,7 +68,7 @@ export default function SuperAdminPage() {
       await removeSuperAdminRole(uid)
       await fetchSuperAdmins()
       await fetchUsers()
-    } catch (error) {
+    } catch {
       alert('Error removing superadmin role')
     } finally {
       setActionLoading(null)

@@ -52,7 +52,7 @@ export class PhoneAuthService {
         window.recaptchaVerifier.clear()
         window.recaptchaVerifier = null
         // console.log('Existing reCAPTCHA cleared')
-      } catch (e) {
+      } catch {
         // console.warn('Error clearing reCAPTCHA:', e)
         window.recaptchaVerifier = null
       }

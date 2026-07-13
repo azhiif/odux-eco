@@ -104,7 +104,7 @@ export default function HomeClient({ categories, featuredProducts, banners }: Ho
                       alt={banners[currentSlide].title}
                       fill
                       priority
-                      sizes="100vw"
+                      sizes="(max-width: 1600px) 92vw, 1472px"
                       className="md:hidden object-cover"
                     />
                     {/* Desktop Image */}
@@ -113,7 +113,7 @@ export default function HomeClient({ categories, featuredProducts, banners }: Ho
                       alt={banners[currentSlide].title}
                       fill
                       priority
-                      sizes="100vw"
+                      sizes="(max-width: 1600px) 92vw, 1472px"
                       className="hidden md:block object-cover"
                     />
                     

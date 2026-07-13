@@ -5,7 +5,7 @@ import { getProducts } from '@/lib/products'
 import { getCategories } from '@/lib/categories'
 import { ErrorBoundary } from '@/components/ui/error-boundary'
 
-export const revalidate = 300 // Revalidate every 5 minutes
+export const revalidate = 0 // Disable cache for debugging
 
 export const metadata: Metadata = {
   title: 'Our Collection | Odux Art Masterpieces',

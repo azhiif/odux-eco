@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react'
 import { db } from '@/lib/firebase'
 import { collection, query, getDocs, orderBy, doc, updateDoc } from 'firebase/firestore'
 import { Users, Shield, ShieldAlert, Mail, Calendar, Search, User as UserIcon, Phone, Key, Clock } from 'lucide-react'
-import { motion } from 'framer-motion'
 import { Modal } from '@/components/ui/modal'
 
 interface UserProfile {

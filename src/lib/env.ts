@@ -8,10 +8,6 @@ const requiredEnvVars = [
   'RAZORPAY_KEY_ID'
 ] as const
 
-const optionalEnvVars = [
-  'RAZORPAY_KEY_SECRET'
-] as const
-
 // Validate environment manually when needed
 export function validateEnv() {
   const missing: string[] = []

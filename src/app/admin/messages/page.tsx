@@ -30,8 +30,8 @@ export default function MessagesPage() {
   const fetchMessages = async () => {
     try {
       setLoading(true)
-      let messagesRef = collection(db, 'contact_messages')
-      let q = query(messagesRef, orderBy('created_at', 'desc'))
+      const messagesRef = collection(db, 'contact_messages')
+      const q = query(messagesRef, orderBy('created_at', 'desc'))
       
       const messagesSnap = await getDocs(q)
       let docsToProcess = messagesSnap.docs

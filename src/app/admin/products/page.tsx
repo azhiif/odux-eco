@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { db } from '@/lib/firebase'
 import { collection, query, getDocs, deleteDoc, doc } from 'firebase/firestore'
 import { Plus, Edit, Trash2, Loader2, Package, Search, Image as ImageIcon } from 'lucide-react'
-import { motion } from 'framer-motion'
 
 interface Product {
   id: string
