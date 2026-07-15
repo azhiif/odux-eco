@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { db } from '@/lib/firebase'
-import { doc, getDoc, updateDoc } from 'firebase/firestore'
+import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore'
 import { Settings, Save, Loader2, Shield, Bell, Palette, Globe, Mail, Phone, Instagram, Facebook } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { Modal } from '@/components/ui/modal'
@@ -44,10 +44,10 @@ export default function AdminSettingsPage() {
   const handleSave = async () => {
     setSaving(true)
     try {
-      await updateDoc(doc(db, 'settings', 'general'), {
+      await setDoc(doc(db, 'settings', 'general'), {
         ...settings,
         updated_at: new Date().toISOString(),
-      })
+      }, { merge: true })
       setModalState({
         isOpen: true,
         title: 'Success',

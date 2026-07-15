@@ -65,9 +65,9 @@ export default function Navbar() {
           <Image 
             src="https://iili.io/FP5RC4R.png" 
             alt="Odux Art Logo" 
-            width={64}
-            height={64}
-            className="h-12 md:h-16 transition-transform duration-300 group-hover:scale-105" 
+            width={120}
+            height={120}
+            className="h-10 md:h-16 w-auto transition-transform duration-300 group-hover:scale-105" 
           />
         </Link>
         

@@ -71,6 +71,12 @@ service firebase.storage {
       allow write: if isAdmin();
     }
 
+    // Instagram images - public read, admin write
+    match /instagram/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // General uploads - fallback (DENY by default for security)
     match /{allPaths=**} {
       allow read: if false;

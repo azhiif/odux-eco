@@ -93,7 +93,7 @@ export default function RootLayout({
         {children}
         <Script 
           src="https://checkout.razorpay.com/v1/checkout.js"
-          strategy="lazyOnload"
+          strategy="afterInteractive"
         />
 
         {/* Microsoft Clarity Tracking - Replays & Heatmaps */}

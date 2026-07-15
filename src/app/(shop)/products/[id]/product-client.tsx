@@ -334,17 +334,24 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
                   <div className="flex flex-wrap gap-3">
                     {uniqueTypes.map((type) => {
                       const isSelected = actualSelectedType === type
+                      const variantForType = availableVariants.find(v => v.type === type)
+                      const hasDifferentPrice = variantForType && variantForType.price !== product.price
                       return (
                         <button
                           key={type}
                           onClick={() => handleTypeSelect(type)}
-                          className={`px-5 py-3 rounded-2xl border-2 font-bold text-sm transition-all ${
+                          className={`px-5 py-3 rounded-2xl border-2 font-bold text-sm transition-all relative ${
                             isSelected
                               ? 'border-brand-purple bg-purple-50 text-brand-purple shadow-md'
                               : 'border-gray-200 bg-white text-gray-600 hover:border-brand-purple/50'
                           }`}
                         >
-                          {type}
+                          <span>{type}</span>
+                          {hasDifferentPrice && (
+                            <span className="ml-2 text-xs bg-brand-purple text-white px-2 py-0.5 rounded-full">
+                              {formatPrice(variantForType!.price)}
+                            </span>
+                          )}
                         </button>
                       )
                     })}
@@ -360,11 +367,14 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
                     {uniqueSizes.map((size) => {
                       const existsWithCurrentType = availableVariants.some(v => v.size === size && v.type === actualSelectedType)
                       const isSelected = actualSelectedSize === size
+                      const variantForSize = availableVariants.find(v => v.size === size && v.type === actualSelectedType) || 
+                                            availableVariants.find(v => v.size === size)
+                      const hasDifferentPrice = variantForSize && variantForSize.price !== product.price
                       return (
                         <button
                           key={size}
                           onClick={() => handleSizeSelect(size)}
-                          className={`px-5 py-3 rounded-2xl border-2 font-bold text-sm transition-all ${
+                          className={`px-5 py-3 rounded-2xl border-2 font-bold text-sm transition-all relative ${
                             isSelected
                               ? 'border-brand-purple bg-purple-50 text-brand-purple shadow-md'
                               : existsWithCurrentType
@@ -372,7 +382,12 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
                                 : 'border-gray-100 bg-gray-50 text-gray-400 border-dashed opacity-70 hover:border-gray-300'
                           }`}
                         >
-                          {size}
+                          <span>{size}</span>
+                          {hasDifferentPrice && (
+                            <span className="ml-2 text-xs bg-brand-purple text-white px-2 py-0.5 rounded-full">
+                              {formatPrice(variantForSize!.price)}
+                            </span>
+                          )}
                         </button>
                       )
                     })}

@@ -13,9 +13,9 @@ export default function Footer() {
               <Image 
                 src="https://iili.io/FP5RC4R.png" 
                 alt="Odux Art Logo" 
-                width={40}
-                height={40}
-                className="h-10 mb-4 brightness-0 opacity-80" 
+                width={120}
+                height={120}
+                className="h-16 w-auto mb-4 brightness-0 opacity-80" 
               />
             </div>
             <p className="text-body text-gray-600 mb-6 leading-relaxed">

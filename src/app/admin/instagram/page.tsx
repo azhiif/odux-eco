@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { db, storage } from '@/lib/firebase'
-import { doc, getDoc, updateDoc } from 'firebase/firestore'
+import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { Instagram, Save, Loader2, Image as ImageIcon, Upload } from 'lucide-react'
 import { motion } from 'framer-motion'
@@ -41,10 +41,10 @@ export default function AdminInstagramPage() {
   const handleSave = async () => {
     setSaving(true)
     try {
-      await updateDoc(doc(db, 'settings', 'general'), {
+      await setDoc(doc(db, 'settings', 'general'), {
         instagramPosts: posts,
         updated_at: new Date().toISOString(),
-      })
+      }, { merge: true })
       setModalState({
         isOpen: true,
         title: 'Success',
