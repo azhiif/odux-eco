@@ -286,19 +286,19 @@ export default function HomeClient({ categories, featuredProducts, banners }: Ho
                       <p className="text-body-small text-muted-foreground mb-4 line-clamp-2 flex-1">
                         {product.description}
                       </p>
-                      <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-100">
-                        <div className="flex flex-col">
+                      <div className="flex items-center mt-auto pt-4 border-t border-gray-100">
+                        <div className="flex flex-col w-full">
                           {product.mrp && product.mrp > product.price ? (
-                            <div className="flex items-baseline gap-2">
-                              <span className="text-sm font-bold text-gray-400 line-through">
+                            <div className="flex items-baseline gap-2 flex-wrap">
+                              <span className="text-sm font-bold text-gray-400 line-through whitespace-nowrap">
                                 {formatPrice(product.mrp)}
                               </span>
-                              <span className="font-heading text-xl font-bold text-foreground">
+                              <span className="font-heading text-xl font-bold text-foreground whitespace-nowrap">
                                 {formatPrice(product.price)}
                               </span>
                             </div>
                           ) : (
-                            <p className="font-heading text-xl font-bold text-foreground">
+                            <p className="font-heading text-xl font-bold text-foreground whitespace-nowrap">
                               {formatPrice(product.price)}
                             </p>
                           )}
