@@ -38,58 +38,84 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
     availableVariants.length > 0 ? availableVariants[0] : null
   )
 
+  useEffect(() => {
+    if (availableVariants.length > 0) {
+      const isValid = selectedVariant && availableVariants.some(v => v.id === selectedVariant.id);
+      if (!isValid) {
+        setSelectedVariant(availableVariants[0]);
+      }
+    } else {
+      setSelectedVariant(null);
+    }
+  }, [availableVariants, selectedVariant]);
+
   const actualSelectedType = selectedVariant?.type || ''
   const actualSelectedSize = selectedVariant?.size || ''
 
   const galleryImages = useMemo(() => {
-    const images = [...(product.image_urls || [])]
-    if (selectedVariant?.images && selectedVariant.images.length > 0) {
-      // Prepend selected variant images so they act as the primary preview
-      return Array.from(new Set([...selectedVariant.images, ...images]))
+    const baseImages = product.image_urls || []
+    const variantImages = availableVariants.flatMap(v => v.images || [])
+    return Array.from(new Set([...baseImages, ...variantImages]))
+  }, [product.image_urls, availableVariants])
+
+  const updateVariantAndImage = (newVariant: ProductVariant) => {
+    setSelectedVariant(newVariant)
+    if (newVariant.images && newVariant.images.length > 0) {
+      const firstVariantImageIndex = galleryImages.findIndex(img => newVariant.images?.includes(img))
+      if (firstVariantImageIndex >= 0) {
+        setSelectedImage(firstVariantImageIndex)
+      } else {
+        setSelectedImage(0)
+      }
+    } else {
+      setSelectedImage(0)
     }
-    return Array.from(new Set(images))
-  }, [product.image_urls, selectedVariant])
+  }
+
+  const changeImage = (index: number) => {
+    setSelectedImage(index)
+    const selectedImageUrl = galleryImages[index]
+    if (selectedVariant?.images?.includes(selectedImageUrl)) return
+    
+    const matchingVariants = availableVariants.filter(v => v.images?.includes(selectedImageUrl))
+    if (matchingVariants.length > 0) {
+      let bestMatch = matchingVariants.find(v => v.type === actualSelectedType && v.size === actualSelectedSize)
+      if (!bestMatch) bestMatch = matchingVariants.find(v => v.type === actualSelectedType)
+      if (!bestMatch) bestMatch = matchingVariants.find(v => v.size === actualSelectedSize)
+      if (!bestMatch) bestMatch = matchingVariants[0]
+      
+      setSelectedVariant(bestMatch)
+    }
+  }
 
   const handleImageSelect = (index: number) => {
-    setSelectedImage(index)
+    changeImage(index)
   }
 
   const handleSwipe = (event: PanInfo) => {
     const threshold = 50
     if (event.offset.x < -threshold && selectedImage < galleryImages.length - 1) {
-      setSelectedImage(selectedImage + 1)
+      changeImage(selectedImage + 1)
     } else if (event.offset.x > threshold && selectedImage > 0) {
-      setSelectedImage(selectedImage - 1)
+      changeImage(selectedImage - 1)
     }
   }
 
   const handleTypeSelect = (type: string) => {
     let newVariant = availableVariants.find(v => v.type === type && v.size === actualSelectedSize)
     if (!newVariant) newVariant = availableVariants.find(v => v.type === type)
-    if (newVariant) {
-      setSelectedVariant(newVariant)
-      // Find the index of the first image of this variant in the gallery
-      if (newVariant.images && newVariant.images.length > 0) {
-        const firstVariantImageIndex = galleryImages.findIndex(img => newVariant.images?.includes(img))
-        setSelectedImage(firstVariantImageIndex >= 0 ? firstVariantImageIndex : 0)
-      }
-    }
+    if (newVariant) updateVariantAndImage(newVariant)
   }
 
   const handleSizeSelect = (size: string) => {
     let newVariant = availableVariants.find(v => v.type === actualSelectedType && v.size === size)
     if (!newVariant) newVariant = availableVariants.find(v => v.size === size)
-    if (newVariant) {
-      setSelectedVariant(newVariant)
-      // Find the index of the first image of this variant in the gallery
-      if (newVariant.images && newVariant.images.length > 0) {
-        const firstVariantImageIndex = galleryImages.findIndex(img => newVariant.images?.includes(img))
-        setSelectedImage(firstVariantImageIndex >= 0 ? firstVariantImageIndex : 0)
-      }
-    }
+    if (newVariant) updateVariantAndImage(newVariant)
   }
 
-  const displayPrice = selectedVariant ? selectedVariant.price : product.price
+  const displayPrice = selectedVariant?.price !== undefined && selectedVariant?.price !== null && String(selectedVariant.price) !== ""
+    ? Number(selectedVariant.price)
+    : Number(product.price)
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || [])
@@ -217,9 +243,9 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
         </button>
       </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-16">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-16 items-start">
         {/* Product Gallery */}
-        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 lg:sticky lg:top-8">
           <div className="relative aspect-square bg-white rounded-[2rem] md:rounded-[3rem] shadow-2xl shadow-brand-pink/10 overflow-hidden border-4 border-white">
             <motion.div
               className="relative w-full h-full cursor-grab active:cursor-grabbing"
@@ -245,18 +271,17 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
               )}
             </motion.div>
 
-            {/* Navigation Arrows */}
             {galleryImages && galleryImages.length > 1 && (
               <>
                 <button
-                  onClick={() => setSelectedImage(Math.max(0, selectedImage - 1))}
+                  onClick={() => changeImage(Math.max(0, selectedImage - 1))}
                   disabled={selectedImage === 0}
                   className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-all disabled:opacity-30 disabled:cursor-not-allowed z-20"
                 >
                   <ChevronLeftIcon className="w-6 h-6 text-gray-800" />
                 </button>
                 <button
-                  onClick={() => setSelectedImage(Math.min(galleryImages.length - 1, selectedImage + 1))}
+                  onClick={() => changeImage(Math.min(galleryImages.length - 1, selectedImage + 1))}
                   disabled={selectedImage === galleryImages.length - 1}
                   className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-all disabled:opacity-30 disabled:cursor-not-allowed z-20"
                 >
@@ -287,10 +312,6 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
                     sizes="96px"
                     className="object-cover"
                   />
-                  {/* Show indicator if this is a variant image */}
-                  {selectedVariant?.images?.includes(url) && (
-                    <div className="absolute bottom-1 right-1 w-3 h-3 bg-brand-purple rounded-full border-2 border-white" />
-                  )}
                 </motion.button>
               ))}
             </div>
@@ -334,8 +355,6 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
                   <div className="flex flex-wrap gap-3">
                     {uniqueTypes.map((type) => {
                       const isSelected = actualSelectedType === type
-                      const variantForType = availableVariants.find(v => v.type === type)
-                      const hasDifferentPrice = variantForType && variantForType.price !== product.price
                       return (
                         <button
                           key={type}
@@ -347,11 +366,6 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
                           }`}
                         >
                           <span>{type}</span>
-                          {hasDifferentPrice && (
-                            <span className="ml-2 text-xs bg-brand-purple text-white px-2 py-0.5 rounded-full">
-                              {formatPrice(variantForType!.price)}
-                            </span>
-                          )}
                         </button>
                       )
                     })}
@@ -367,9 +381,6 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
                     {uniqueSizes.map((size) => {
                       const existsWithCurrentType = availableVariants.some(v => v.size === size && v.type === actualSelectedType)
                       const isSelected = actualSelectedSize === size
-                      const variantForSize = availableVariants.find(v => v.size === size && v.type === actualSelectedType) || 
-                                            availableVariants.find(v => v.size === size)
-                      const hasDifferentPrice = variantForSize && variantForSize.price !== product.price
                       return (
                         <button
                           key={size}
@@ -383,11 +394,6 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
                           }`}
                         >
                           <span>{size}</span>
-                          {hasDifferentPrice && (
-                            <span className="ml-2 text-xs bg-brand-purple text-white px-2 py-0.5 rounded-full">
-                              {formatPrice(variantForSize!.price)}
-                            </span>
-                          )}
                         </button>
                       )
                     })}
@@ -491,8 +497,8 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
                 <Link href={`/products/${relatedProduct.id}`} className="block group h-full">
                   <article className="premium-card bg-white h-full flex flex-col group-hover:-translate-y-2 transition-all duration-400">
                     <div className="aspect-square relative overflow-hidden rounded-t-[22px] bg-gray-50">
-                      {relatedProduct.image_urls?.[0] ? (
-                        <Image src={relatedProduct.image_urls[0]} alt={relatedProduct.name} fill sizes="(max-width: 768px) 50vw, 25vw" className="object-cover group-hover:scale-110 transition-transform duration-700" />
+                      {(relatedProduct.image_urls?.[0] || relatedProduct.variants?.[0]?.images?.[0]) ? (
+                        <Image src={relatedProduct.image_urls?.[0] || relatedProduct.variants?.[0]?.images?.[0] || ''} alt={relatedProduct.name} fill sizes="(max-width: 768px) 50vw, 25vw" className="object-cover group-hover:scale-110 transition-transform duration-700" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
                           <Camera className="h-10 w-10 text-gray-300" />

@@ -97,7 +97,7 @@ export default function AdminLayout({
   ]
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="h-screen bg-background flex overflow-hidden">
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div
@@ -114,7 +114,7 @@ export default function AdminLayout({
         <div className="flex items-center justify-between h-20 px-6 border-b-2 border-gray-50">
           <Link href="/admin/dashboard" className="flex items-center">
             <div className="w-10 h-10 bg-black text-white rounded-xl flex items-center justify-center mr-3 shadow-md p-1.5">
-              <img src="https://iili.io/FP5RC4R.png" alt="Odux Logo" className="w-full h-full object-contain" />
+              <img src="/logo-images/odux-logo.png" alt="Odux Logo" className="w-full h-full object-contain" />
             </div>
             <span className="text-gray-900 font-heading font-bold text-xl">Admin Panel</span>
           </Link>

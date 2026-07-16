@@ -66,6 +66,7 @@ interface CartItem {
     price: number
     image_urls: string[]
     stock_quantity: number
+    variants?: any[]
   }
 }
 
@@ -453,7 +454,7 @@ export default function CheckoutPage() {
                     return (
                     <div key={item.id} className="flex gap-4 items-center bg-white/60 p-3 rounded-2xl backdrop-blur-sm border border-white">
                       <div className="w-16 h-16 rounded-xl overflow-hidden relative shrink-0">
-                        <Image src={item.customerUploads?.[0] || item.variantSnapshot?.image || item.products.image_urls[0]} alt={item.products.name} fill className="object-cover" />
+                        <Image src={item.customerUploads?.[0] || item.variantSnapshot?.image || item.products.image_urls?.[0] || item.products.variants?.[0]?.images?.[0] || ''} alt={item.products.name} fill className="object-cover" />
                       </div>
                       <div className="flex-1">
                         <h4 className="font-bold text-gray-800 text-sm line-clamp-1">{item.products.name}</h4>

@@ -255,9 +255,9 @@ export default function HomeClient({ categories, featuredProducts, banners }: Ho
                 <Link href={`/products/${product.id}`} className="block group">
                   <article className="premium-card bg-white h-full flex flex-col group-hover:-translate-y-2 group-hover:shadow-2xl transition-all duration-300 border border-transparent group-hover:border-gray-100">
                     <div className="relative aspect-[4/5] overflow-hidden rounded-t-[22px]">
-                      {product.image_urls[0] ? (
+                      {(product.image_urls?.[0] || product.variants?.[0]?.images?.[0]) ? (
                         <Image
-                          src={product.image_urls[0]}
+                          src={product.image_urls?.[0] || product.variants?.[0]?.images?.[0] || ''}
                           alt={product.name}
                           fill
                           className="object-cover transition-transform duration-700 group-hover:scale-110"

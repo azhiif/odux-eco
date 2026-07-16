@@ -19,6 +19,7 @@ export interface CartItem {
     price: number
     image_urls: string[]
     stock_quantity: number
+    variants?: any[]
   }
 }
 

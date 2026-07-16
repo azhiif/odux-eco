@@ -16,6 +16,7 @@ interface Product {
   featured: boolean
   stock_quantity: number
   is_active: boolean
+  variants?: any[]
 }
 
 export default function AdminProductsPage() {
@@ -129,9 +130,9 @@ export default function AdminProductsPage() {
                   <tr key={product.id} className="hover:bg-gray-50/50 transition-colors">
                     <td className="p-4">
                       <div className="flex items-center">
-                        {product.image_urls[0] ? (
+                        {(product.image_urls?.[0] || product.variants?.[0]?.images?.[0]) ? (
                           <img
-                            src={product.image_urls[0]}
+                            src={product.image_urls?.[0] || product.variants?.[0]?.images?.[0] || ''}
                             alt={product.name}
                             className="h-12 w-12 rounded-xl object-cover mr-4 shadow-sm"
                           />

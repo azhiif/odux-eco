@@ -153,7 +153,7 @@ export default function CartPage() {
                     <Link href={`/products/${item.products.id}`} className="shrink-0">
                       <div className="relative w-28 h-28 md:w-36 md:h-36 bg-gray-50 rounded-2xl overflow-hidden border-2 border-gray-100 group-hover:border-brand-pink transition-colors">
                         <Image
-                          src={item.customerUploads?.[0] || item.variantSnapshot?.image || item.products.image_urls[0]}
+                          src={item.customerUploads?.[0] || item.variantSnapshot?.image || item.products.image_urls?.[0] || item.products.variants?.[0]?.images?.[0] || ''}
                           alt={item.products.name}
                           fill
                           className="object-cover"

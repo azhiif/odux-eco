@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { db, storage } from '@/lib/firebase'
 import { collection, query, where, getDocs, addDoc, doc, getDoc, updateDoc } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
-import { ArrowLeft, Upload, X, Package, Plus, Trash } from 'lucide-react'
+import { ArrowLeft, Upload, X, Package, Plus } from 'lucide-react'
 import { Modal } from '@/components/ui/modal'
 
 import { ProductVariant } from '@/lib/products'
@@ -49,6 +49,7 @@ export default function NewProductPage() {
     if (productId) {
       fetchProduct()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [productId])
 
   const fetchProduct = async () => {
@@ -61,13 +62,13 @@ export default function NewProductPage() {
         setFormData({
           name: data.name || '',
           description: data.description || '',
-          price: data.price ? data.price.toString() : '',
-          mrp: data.mrp ? data.mrp.toString() : '',
+          price: data.price !== undefined && data.price !== null ? data.price.toString() : '',
+          mrp: data.mrp !== undefined && data.mrp !== null ? data.mrp.toString() : '',
           category_id: data.category_id || '',
-          stock_quantity: data.stock_quantity !== undefined ? data.stock_quantity.toString() : '',
+          stock_quantity: data.stock_quantity !== undefined && data.stock_quantity !== null ? data.stock_quantity.toString() : '',
           dimensions: data.dimensions || '',
           material: data.material || '',
-          weight: data.weight ? data.weight.toString() : '',
+          weight: data.weight !== undefined && data.weight !== null ? data.weight.toString() : '',
           sku: data.sku || '',
           featured: data.featured || false,
           on_sale: data.on_sale || false
@@ -197,11 +198,13 @@ export default function NewProductPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!formData.name || !formData.price || !formData.category_id || uploadedImages.length === 0) {
+    const hasAnyImage = uploadedImages.length > 0 || variants.some(v => v.images && v.images.length > 0)
+
+    if (!formData.name || !formData.price || !formData.category_id || !hasAnyImage) {
       setModalState({
         isOpen: true,
         title: 'Validation Error',
-        message: 'Please fill in all required fields and upload at least one image',
+        message: 'Please fill in all required fields and upload at least one image (either main or variant)',
         type: 'error'
       })
       return
@@ -209,6 +212,14 @@ export default function NewProductPage() {
 
     setLoading(true)
     try {
+      let finalImages = uploadedImages
+      if (finalImages.length === 0) {
+        const firstVariantWithImage = variants.find(v => v.images && v.images.length > 0)
+        if (firstVariantWithImage) {
+          finalImages = [firstVariantWithImage.images[0]]
+        }
+      }
+
       const productData = {
         name: formData.name,
         description: formData.description,
@@ -221,7 +232,7 @@ export default function NewProductPage() {
         material: formData.material,
         weight: formData.weight ? parseFloat(formData.weight as string) : null,
         sku: formData.sku,
-        image_urls: uploadedImages,
+        image_urls: finalImages,
         variants: variants,
         featured: formData.featured,
         is_active: true,
@@ -365,7 +376,7 @@ export default function NewProductPage() {
               className="w-5 h-5 text-red-600 rounded border-gray-300 focus:ring-red-600 mr-3"
             />
             <label htmlFor="on_sale" className="text-sm font-bold text-red-800">
-              On Sale (Shows "Sale" tag on product cards)
+              On Sale (Shows &quot;Sale&quot; tag on product cards)
             </label>
           </div>
         </div>
@@ -602,6 +613,14 @@ export default function NewProductPage() {
           </button>
         </div>
       </form>
+
+      <Modal
+        isOpen={modalState.isOpen}
+        onClose={() => setModalState(prev => ({ ...prev, isOpen: false }))}
+        title={modalState.title}
+        message={modalState.message}
+        type={modalState.type}
+      />
     </div>
   )
 }

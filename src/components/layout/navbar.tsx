@@ -63,7 +63,7 @@ export default function Navbar() {
       <div className="container-premium pb-3 pt-2 md:pt-3 md:pb-4 flex justify-between items-center">
         <Link href="/" className="flex items-center group">
           <Image 
-            src="https://iili.io/FP5RC4R.png" 
+            src="/logo-images/odux-logo.png"
             alt="Odux Art Logo" 
             width={120}
             height={120}

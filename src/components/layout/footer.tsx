@@ -11,7 +11,7 @@ export default function Footer() {
           <div className="lg:col-span-1">
             <div className="mb-6">
               <Image 
-                src="https://iili.io/FP5RC4R.png" 
+                src="/logo-images/odux-logo.png"
                 alt="Odux Art Logo" 
                 width={120}
                 height={120}

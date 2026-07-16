@@ -48,6 +48,7 @@ interface UnifiedOrder {
       id: string
       name: string
       image_urls: string[]
+      variants?: any[]
     }
   }>
   // Custom Order specific fields
@@ -410,7 +411,7 @@ export default function OrdersPage() {
                           <div key={item.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl w-full sm:w-[calc(50%-0.5rem)] md:w-64 border border-gray-100">
                             <div className="relative w-14 h-14 flex-shrink-0">
                               <img
-                                src={item.customerUploads?.[0] || item.variantSnapshot?.image || item.products.image_urls[0]}
+                                src={item.customerUploads?.[0] || item.variantSnapshot?.image || item.products.image_urls?.[0] || item.products.variants?.[0]?.images?.[0] || ''}
                                 alt={item.products.name}
                                 className="w-full h-full object-cover rounded-xl shadow-sm"
                               />
@@ -520,7 +521,7 @@ export default function OrdersPage() {
                         <div key={item.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
                           <div className="relative w-24 h-24 flex-shrink-0">
                             <img
-                              src={item.customerUploads?.[0] || item.variantSnapshot?.image || item.products.image_urls[0]}
+                              src={item.customerUploads?.[0] || item.variantSnapshot?.image || item.products.image_urls?.[0] || item.products.variants?.[0]?.images?.[0] || ''}
                               alt={item.products.name}
                               className="w-full h-full object-cover rounded-xl shadow-sm border border-gray-200"
                             />
