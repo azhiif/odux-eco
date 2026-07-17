@@ -7,6 +7,7 @@ export interface ProductVariant {
   type: string
   size: string
   price: number
+  mrp?: number
   images: string[]
   stock?: number
   isActive: boolean

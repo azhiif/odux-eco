@@ -117,6 +117,10 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
     ? Number(selectedVariant.price)
     : Number(product.price)
 
+  const displayMrp = selectedVariant?.mrp !== undefined && selectedVariant?.mrp !== null && String(selectedVariant.mrp) !== "" && Number(selectedVariant.mrp) > 0
+    ? Number(selectedVariant.mrp)
+    : (product.mrp ? Number(product.mrp) : null)
+
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || [])
     const validFiles = files.filter(file => file.type.startsWith('image/'))
@@ -172,6 +176,7 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
           type: selectedVariant.type,
           size: selectedVariant.size,
           price: selectedVariant.price,
+          mrp: selectedVariant.mrp,
           image: selectedVariant.images?.[0] || ''
         } : null
       }
@@ -329,16 +334,16 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
               <p className="text-body-large text-gray-600 mb-8 leading-relaxed">{product.description}</p>
 
               <div className="mb-8">
-                {product.mrp && product.mrp > displayPrice ? (
+                {displayMrp && displayMrp > displayPrice ? (
                   <div className="flex items-baseline gap-3">
                     <span className="text-2xl md:text-3xl font-heading font-bold text-gray-400 line-through">
-                      {formatPrice(product.mrp)}
+                      {formatPrice(displayMrp)}
                     </span>
                     <span className="text-4xl md:text-5xl font-heading font-bold text-brand-purple">
                       {formatPrice(displayPrice)}
                     </span>
                     <span className="text-sm font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                      {Math.round(((product.mrp - displayPrice) / product.mrp) * 100)}% OFF
+                      {Math.round(((displayMrp - displayPrice) / displayMrp) * 100)}% OFF
                     </span>
                   </div>
                 ) : (

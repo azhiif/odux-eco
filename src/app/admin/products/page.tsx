@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { db } from '@/lib/firebase'
 import { collection, query, getDocs, deleteDoc, doc } from 'firebase/firestore'
 import { Plus, Edit, Trash2, Loader2, Package, Search, Image as ImageIcon } from 'lucide-react'
+import { formatPrice } from '@/lib/utils'
 
 interface Product {
   id: string
@@ -148,7 +149,7 @@ export default function AdminProductsPage() {
                       </div>
                     </td>
                     <td className="p-4 font-bold text-gray-900">
-                      ₹{product.price.toFixed(2)}
+                      {formatPrice(product.price)}
                     </td>
                     <td className="p-4 font-bold text-gray-900">
                       {product.stock_quantity}

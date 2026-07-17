@@ -42,6 +42,7 @@ interface UnifiedOrder {
       type: string
       size: string
       price: number
+      mrp?: number
       image: string
     }
     products: {

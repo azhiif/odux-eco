@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react'
 import { auth, db } from '@/lib/firebase'
-import { collection, query, where, getDocs } from 'firebase/firestore'
+import { collection, query, where, getDocs, orderBy } from 'firebase/firestore'
+import { formatPrice } from '@/lib/utils'
 import { Package, Truck, Clock, CheckCircle, User } from 'lucide-react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
@@ -144,7 +145,7 @@ export default function MyOrdersPage() {
                             </div>
                             <div>
                               <p className="text-sm font-bold text-gray-900 line-clamp-1">{item.title}</p>
-                              <p className="text-xs font-medium text-gray-500">Qty: {item.quantity} × ${item.price}</p>
+                              <p className="text-xs font-medium text-gray-500">Qty: {item.quantity} × {formatPrice(Number(item.price))}</p>
                             </div>
                           </div>
                         ))}
@@ -154,7 +155,7 @@ export default function MyOrdersPage() {
                     <div className="bg-gray-50 p-4 rounded-2xl h-fit">
                       <div className="flex justify-between items-center mb-4">
                         <span className="text-sm font-bold text-gray-500">Total Amount</span>
-                        <span className="text-lg font-heading text-brand-pink">${Number(order.total_amount).toFixed(2)}</span>
+                        <span className="text-lg font-heading text-brand-pink">{formatPrice(Number(order.total_amount))}</span>
                       </div>
                       
                       {order.tracking_number ? (

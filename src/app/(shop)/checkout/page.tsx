@@ -57,6 +57,7 @@ interface CartItem {
     type: string
     size: string
     price: number
+    mrp?: number
     image: string
   }
   customerUploads?: string[]

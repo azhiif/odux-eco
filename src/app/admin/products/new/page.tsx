@@ -148,7 +148,8 @@ export default function NewProductPage() {
       id: Math.random().toString(36).substr(2, 9),
       type: '',
       size: '',
-      price: parseFloat(formData.price || '0'),
+      price: parseInt(formData.price || '0', 10),
+      mrp: parseInt(formData.mrp || '0', 10),
       images: [],
       stock: 0,
       isActive: true
@@ -223,8 +224,8 @@ export default function NewProductPage() {
       const productData = {
         name: formData.name,
         description: formData.description,
-        price: parseFloat(formData.price),
-        mrp: formData.mrp ? parseFloat(formData.mrp) : null,
+        price: parseInt(formData.price, 10),
+        mrp: formData.mrp ? parseInt(formData.mrp, 10) : null,
         on_sale: formData.on_sale,
         category_id: formData.category_id,
         stock_quantity: parseInt(formData.stock_quantity as string) || 0,
@@ -326,7 +327,7 @@ export default function NewProductPage() {
               <label className="block text-sm font-bold text-gray-700 mb-2">Selling Price (₹) *</label>
               <input
                 type="number"
-                required min="0" step="0.01"
+                required min="0" step="1"
                 value={formData.price}
                 onChange={(e) => setFormData({...formData, price: e.target.value})}
                 className="form-input"
@@ -337,7 +338,7 @@ export default function NewProductPage() {
               <label className="block text-sm font-bold text-gray-700 mb-2">MRP (₹) - Optional</label>
               <input
                 type="number"
-                min="0" step="0.01"
+                min="0" step="1"
                 value={formData.mrp}
                 onChange={(e) => setFormData({...formData, mrp: e.target.value})}
                 className="form-input"
@@ -409,7 +410,7 @@ export default function NewProductPage() {
               <label className="block text-sm font-bold text-gray-700 mb-2">Weight (kg)</label>
               <input
                 type="number"
-                min="0" step="0.01"
+                min="0" step="1"
                 value={formData.weight}
                 onChange={(e) => setFormData({...formData, weight: e.target.value})}
                 className="form-input"
@@ -486,10 +487,21 @@ export default function NewProductPage() {
                       <input
                         type="number"
                         value={variant.price}
-                        onChange={(e) => updateVariant(variant.id, 'price', parseFloat(e.target.value))}
+                        onChange={(e) => updateVariant(variant.id, 'price', parseInt(e.target.value, 10) || 0)}
                         className="form-input text-base rounded-xl"
-                        placeholder="0.00"
-                        step="0.01"
+                        placeholder="0"
+                        step="1"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-gray-700 mb-2">Variant MRP (₹)</label>
+                      <input
+                        type="number"
+                        value={variant.mrp || ''}
+                        onChange={(e) => updateVariant(variant.id, 'mrp', parseInt(e.target.value, 10) || 0)}
+                        className="form-input text-base rounded-xl"
+                        placeholder="0"
+                        step="1"
                       />
                     </div>
                     <div>
