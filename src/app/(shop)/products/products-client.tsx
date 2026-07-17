@@ -210,18 +210,6 @@ export default function ProductsClient({ initialProducts, categories }: Products
                             Sold Out
                           </div>
                         )}
-
-                        {/* Quick Add Overlay */}
-                        <div className="absolute inset-x-0 bottom-0 p-4 opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 flex justify-center bg-gradient-to-t from-black/50 to-transparent z-20">
-                          <Button 
-                            className="btn-premium-gold w-full max-w-[200px] shadow-2xl"
-                            onClick={(e) => handleAddToCart(product.id, e)}
-                            disabled={product.stock_quantity === 0}
-                          >
-                            <ShoppingBag className="w-4 h-4 mr-2" /> 
-                            {product.stock_quantity === 0 ? 'Out of Stock' : 'Quick Add'}
-                          </Button>
-                        </div>
                       </div>
                       
                       <div className="p-5 flex-1 flex flex-col z-10 bg-white rounded-b-[22px]">
@@ -258,14 +246,6 @@ export default function ProductsClient({ initialProducts, categories }: Products
                               </p>
                             )}
                           </div>
-                          {/* Mobile quick add button */}
-                          <button 
-                            className="md:hidden w-10 h-10 rounded-full bg-pink-50 text-brand-pink flex items-center justify-center hover:bg-brand-pink hover:text-white transition-colors"
-                            onClick={(e) => handleAddToCart(product.id, e)}
-                            disabled={product.stock_quantity === 0}
-                          >
-                            <ShoppingBag className="w-5 h-5" />
-                          </button>
                         </div>
                       </div>
                     </article>

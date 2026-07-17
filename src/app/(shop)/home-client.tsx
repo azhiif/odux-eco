@@ -268,15 +268,6 @@ export default function HomeClient({ categories, featuredProducts, banners }: Ho
                           <Camera className="w-12 h-12 text-gray-300" />
                         </div>
                       )}
-                      {/* Quick Add Overlay */}
-                      <div className="absolute inset-x-0 bottom-0 p-4 opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 flex justify-center bg-gradient-to-t from-black/50 to-transparent z-20">
-                        <Button 
-                          className="btn-premium-gold w-full max-w-[200px] shadow-2xl"
-                          onClick={(e) => { e.preventDefault(); /* Add to cart logic here */ }}
-                        >
-                          <ShoppingBag className="w-4 h-4 mr-2" /> Quick Add
-                        </Button>
-                      </div>
                     </div>
                     
                     <div className="p-5 flex-1 flex flex-col">
