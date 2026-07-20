@@ -3,8 +3,8 @@
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { db } from '@/lib/firebase'
-import { collection, query, getDocs, deleteDoc, doc } from 'firebase/firestore'
-import { Plus, Edit, Trash2, Loader2, Package, Search, Image as ImageIcon } from 'lucide-react'
+import { collection, query, getDocs, deleteDoc, doc, updateDoc } from 'firebase/firestore'
+import { Plus, Edit, Trash2, Loader2, Package, Search, Image as ImageIcon, ChevronUp, ChevronDown } from 'lucide-react'
 import { formatPrice } from '@/lib/utils'
 
 interface Product {
@@ -18,6 +18,7 @@ interface Product {
   stock_quantity: number
   is_active: boolean
   variants?: any[]
+  order?: number
 }
 
 export default function AdminProductsPage() {
@@ -35,6 +36,8 @@ export default function AdminProductsPage() {
       const q = query(collection(db, 'products'))
       const snapshot = await getDocs(q)
       const productsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product))
+      // Sort by order field, defaulting to 0 if not set
+      productsData.sort((a, b) => (a.order || 0) - (b.order || 0))
       setProducts(productsData)
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
@@ -42,6 +45,56 @@ export default function AdminProductsPage() {
       }
     } finally {
       setLoading(false)
+    }
+  }
+
+  const moveProductUp = async (index: number) => {
+    if (index === 0) return
+    const newProducts = [...products]
+    const temp = newProducts[index]
+    newProducts[index] = newProducts[index - 1]
+    newProducts[index - 1] = temp
+    
+    // Update order values
+    newProducts.forEach((product, idx) => {
+      product.order = idx
+    })
+    
+    setProducts(newProducts)
+    
+    // Save to Firestore
+    try {
+      await updateDoc(doc(db, 'products', newProducts[index].id), { order: index })
+      await updateDoc(doc(db, 'products', newProducts[index - 1].id), { order: index - 1 })
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error updating product order:', error)
+      }
+    }
+  }
+
+  const moveProductDown = async (index: number) => {
+    if (index === products.length - 1) return
+    const newProducts = [...products]
+    const temp = newProducts[index]
+    newProducts[index] = newProducts[index + 1]
+    newProducts[index + 1] = temp
+    
+    // Update order values
+    newProducts.forEach((product, idx) => {
+      product.order = idx
+    })
+    
+    setProducts(newProducts)
+    
+    // Save to Firestore
+    try {
+      await updateDoc(doc(db, 'products', newProducts[index].id), { order: index })
+      await updateDoc(doc(db, 'products', newProducts[index + 1].id), { order: index + 1 })
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error updating product order:', error)
+      }
     }
   }
 
@@ -119,6 +172,7 @@ export default function AdminProductsPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-gray-50 border-b-2 border-gray-100">
+                  <th className="p-4 font-bold text-sm text-gray-400 uppercase tracking-wider">Order</th>
                   <th className="p-4 font-bold text-sm text-gray-400 uppercase tracking-wider">Product</th>
                   <th className="p-4 font-bold text-sm text-gray-400 uppercase tracking-wider">Price</th>
                   <th className="p-4 font-bold text-sm text-gray-400 uppercase tracking-wider">Stock</th>
@@ -127,8 +181,28 @@ export default function AdminProductsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y-2 divide-gray-50">
-                {filteredProducts.map((product) => (
+                {filteredProducts.map((product, index) => (
                   <tr key={product.id} className="hover:bg-gray-50/50 transition-colors">
+                    <td className="p-4">
+                      <div className="flex flex-col gap-1">
+                        <button
+                          onClick={() => moveProductUp(index)}
+                          disabled={index === 0}
+                          className="w-8 h-8 bg-gray-100 hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed rounded-full flex items-center justify-center transition-colors"
+                          title="Move up"
+                        >
+                          <ChevronUp className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => moveProductDown(index)}
+                          disabled={index === filteredProducts.length - 1}
+                          className="w-8 h-8 bg-gray-100 hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed rounded-full flex items-center justify-center transition-colors"
+                          title="Move down"
+                        >
+                          <ChevronDown className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
                     <td className="p-4">
                       <div className="flex items-center">
                         {(product.image_urls?.[0] || product.variants?.[0]?.images?.[0]) ? (

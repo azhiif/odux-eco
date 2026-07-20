@@ -29,6 +29,7 @@ export interface Product {
   material?: string
   weight?: number
   sku?: string
+  order?: number
   categories?: {
     id: string
     name: string
@@ -42,7 +43,10 @@ export async function getProducts(): Promise<Product[]> {
     const productsRef = collection(db, 'products')
     const q = query(productsRef, where('is_active', '==', true))
     const querySnapshot = await getDocs(q)
-    return querySnapshot.docs.map(doc => serializeDoc(doc) as Product)
+    const products = querySnapshot.docs.map(doc => serializeDoc(doc) as Product)
+    // Sort by order field, defaulting to 0 if not set
+    products.sort((a, b) => (a.order || 0) - (b.order || 0))
+    return products
   } catch (error) {
     console.error('Error fetching products:', error)
     return []
@@ -59,7 +63,10 @@ export async function getFeaturedProducts(limitCount: number = 8): Promise<Produ
       limit(limitCount)
     )
     const querySnapshot = await getDocs(q)
-    return querySnapshot.docs.map(doc => serializeDoc(doc) as Product)
+    const products = querySnapshot.docs.map(doc => serializeDoc(doc) as Product)
+    // Sort by order field, defaulting to 0 if not set
+    products.sort((a, b) => (a.order || 0) - (b.order || 0))
+    return products
   } catch (error) {
     console.error('Error fetching featured products:', error)
     return []
@@ -93,6 +100,26 @@ export async function getRelatedProducts(productId: string, limitCount: number =
     return products.filter(p => p.id !== productId).slice(0, limitCount)
   } catch (error) {
     console.error('Error fetching related products:', error)
+    return []
+  }
+}
+
+export async function getProductsByCategory(categoryId: string, limitCount: number = 10): Promise<Product[]> {
+  try {
+    const productsRef = collection(db, 'products')
+    const q = query(
+      productsRef,
+      where('is_active', '==', true),
+      where('category_id', '==', categoryId),
+      limit(limitCount)
+    )
+    const querySnapshot = await getDocs(q)
+    const products = querySnapshot.docs.map(doc => serializeDoc(doc) as Product)
+    // Sort by order field, defaulting to 0 if not set
+    products.sort((a, b) => (a.order || 0) - (b.order || 0))
+    return products
+  } catch (error) {
+    console.error('Error fetching products by category:', error)
     return []
   }
 }

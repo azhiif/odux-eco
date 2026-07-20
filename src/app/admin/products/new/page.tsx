@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { db, storage } from '@/lib/firebase'
 import { collection, query, where, getDocs, addDoc, doc, getDoc, updateDoc } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
-import { ArrowLeft, Upload, X, Package, Plus } from 'lucide-react'
+import { ArrowLeft, Upload, X, Package, Plus, ChevronUp, ChevronDown } from 'lucide-react'
 import { Modal } from '@/components/ui/modal'
 
 import { ProductVariant } from '@/lib/products'
@@ -37,7 +37,8 @@ export default function NewProductPage() {
     weight: '',
     sku: '',
     featured: false,
-    on_sale: false
+    on_sale: false,
+    order: undefined as number | undefined
   })
   const [modalState, setModalState] = useState<{isOpen: boolean, title: string, message: string, type: 'error'|'success'|'info'}>({
     isOpen: false, title: '', message: '', type: 'info'
@@ -71,7 +72,8 @@ export default function NewProductPage() {
           weight: data.weight !== undefined && data.weight !== null ? data.weight.toString() : '',
           sku: data.sku || '',
           featured: data.featured || false,
-          on_sale: data.on_sale || false
+          on_sale: data.on_sale || false,
+          order: data.order
         })
         if (data.image_urls) {
           setUploadedImages(data.image_urls)
@@ -143,6 +145,24 @@ export default function NewProductPage() {
     setUploadedImages(uploadedImages.filter((_, i) => i !== index))
   }
 
+  const moveImageUp = (index: number) => {
+    if (index === 0) return
+    const newImages = [...uploadedImages]
+    const temp = newImages[index]
+    newImages[index] = newImages[index - 1]
+    newImages[index - 1] = temp
+    setUploadedImages(newImages)
+  }
+
+  const moveImageDown = (index: number) => {
+    if (index === uploadedImages.length - 1) return
+    const newImages = [...uploadedImages]
+    const temp = newImages[index]
+    newImages[index] = newImages[index + 1]
+    newImages[index + 1] = temp
+    setUploadedImages(newImages)
+  }
+
   const addVariant = () => {
     setVariants([...variants, {
       id: Math.random().toString(36).substr(2, 9),
@@ -196,6 +216,34 @@ export default function NewProductPage() {
     } : v))
   }
 
+  const moveVariantImageUp = (variantId: string, imageIndex: number) => {
+    if (imageIndex === 0) return
+    setVariants(variants.map(v => {
+      if (v.id === variantId) {
+        const newImages = [...v.images]
+        const temp = newImages[imageIndex]
+        newImages[imageIndex] = newImages[imageIndex - 1]
+        newImages[imageIndex - 1] = temp
+        return { ...v, images: newImages }
+      }
+      return v
+    }))
+  }
+
+  const moveVariantImageDown = (variantId: string, imageIndex: number) => {
+    setVariants(variants.map(v => {
+      if (v.id === variantId) {
+        if (imageIndex === v.images.length - 1) return v
+        const newImages = [...v.images]
+        const temp = newImages[imageIndex]
+        newImages[imageIndex] = newImages[imageIndex + 1]
+        newImages[imageIndex + 1] = temp
+        return { ...v, images: newImages }
+      }
+      return v
+    }))
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -221,6 +269,10 @@ export default function NewProductPage() {
         }
       }
 
+      // Get current product count for order
+      const productsSnapshot = await getDocs(collection(db, 'products'))
+      const order = productId ? formData.order : productsSnapshot.size
+
       const productData = {
         name: formData.name,
         description: formData.description,
@@ -237,6 +289,7 @@ export default function NewProductPage() {
         variants: variants,
         featured: formData.featured,
         is_active: true,
+        order: order,
         ...(productId ? {} : { created_at: new Date().toISOString() }),
         updated_at: new Date().toISOString()
       }
@@ -532,15 +585,42 @@ export default function NewProductPage() {
                     <label className="block text-xs font-bold text-gray-700 mb-2">Variant Images</label>
                     <div className="flex flex-wrap gap-3">
                       {variant.images.map((img, imgIdx) => (
-                        <div key={imgIdx} className="relative w-20 h-20 rounded-xl overflow-hidden border border-gray-200 group shadow-sm">
-                          <img src={img} alt={`Variant ${index} img ${imgIdx}`} className="w-full h-full object-cover" />
-                          <button
-                            type="button"
-                            onClick={() => removeVariantImage(variant.id, imgIdx)}
-                            className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <X className="w-4 h-4 text-white" />
-                          </button>
+                        <div key={imgIdx} className="relative group">
+                          <div className="relative w-20 h-20 rounded-xl overflow-hidden border border-gray-200 shadow-sm">
+                            <img src={img} alt={`Variant ${index} img ${imgIdx}`} className="w-full h-full object-cover" />
+                            {imgIdx === 0 && (
+                              <div className="absolute top-1 left-1 bg-brand-purple text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                                Main
+                              </div>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => removeVariantImage(variant.id, imgIdx)}
+                              className="absolute top-1 right-1 w-6 h-6 bg-white/90 backdrop-blur-sm text-red-500 hover:bg-red-500 hover:text-white rounded-full flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 shadow-sm"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                          <div className="flex justify-center gap-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                              type="button"
+                              onClick={() => moveVariantImageUp(variant.id, imgIdx)}
+                              disabled={imgIdx === 0}
+                              className="w-6 h-6 bg-gray-100 hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed rounded-full flex items-center justify-center transition-colors"
+                              title="Move up"
+                            >
+                              <ChevronUp className="h-3 w-3" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => moveVariantImageDown(variant.id, imgIdx)}
+                              disabled={imgIdx === variant.images.length - 1}
+                              className="w-6 h-6 bg-gray-100 hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed rounded-full flex items-center justify-center transition-colors"
+                              title="Move down"
+                            >
+                              <ChevronDown className="h-3 w-3" />
+                            </button>
+                          </div>
                         </div>
                       ))}
                       <label className="w-20 h-20 rounded-xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 cursor-pointer hover:border-brand-purple hover:text-brand-purple transition-all bg-white hover:bg-purple-50 group">
@@ -591,18 +671,45 @@ export default function NewProductPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {uploadedImages.map((url, index) => (
                 <div key={index} className="relative group">
-                  <img
-                    src={url}
-                    alt={`Product ${index + 1}`}
-                    className="w-full h-40 object-cover rounded-2xl shadow-sm border border-gray-100"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeImage(index)}
-                    className="absolute top-2 right-2 w-8 h-8 bg-white/90 backdrop-blur-sm text-red-500 hover:bg-red-500 hover:text-white rounded-full flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 shadow-md"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
+                  <div className="relative">
+                    <img
+                      src={url}
+                      alt={`Product ${index + 1}`}
+                      className="w-full h-40 object-cover rounded-2xl shadow-sm border border-gray-100"
+                    />
+                    {index === 0 && (
+                      <div className="absolute top-2 left-2 bg-brand-purple text-white text-xs font-bold px-2 py-1 rounded-full">
+                        Main
+                      </div>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => removeImage(index)}
+                      className="absolute top-2 right-2 w-8 h-8 bg-white/90 backdrop-blur-sm text-red-500 hover:bg-red-500 hover:text-white rounded-full flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 shadow-md"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <div className="flex justify-center gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      type="button"
+                      onClick={() => moveImageUp(index)}
+                      disabled={index === 0}
+                      className="w-8 h-8 bg-gray-100 hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed rounded-full flex items-center justify-center transition-colors"
+                      title="Move up"
+                    >
+                      <ChevronUp className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => moveImageDown(index)}
+                      disabled={index === uploadedImages.length - 1}
+                      className="w-8 h-8 bg-gray-100 hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed rounded-full flex items-center justify-center transition-colors"
+                      title="Move down"
+                    >
+                      <ChevronDown className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

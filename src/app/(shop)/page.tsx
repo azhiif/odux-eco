@@ -3,7 +3,7 @@ import { Metadata } from 'next'
 import { ErrorBoundary } from '@/components/ui/error-boundary'
 import { OrganizationStructuredData, LocalBusinessStructuredData } from '@/components/seo/StructuredData'
 import HomeClient from './home-client'
-import { getFeaturedProducts } from '@/lib/products'
+import { getFeaturedProducts, getProductsByCategory } from '@/lib/products'
 import { getCategories } from '@/lib/categories'
 import { getActiveBanners } from '@/lib/banners'
 
@@ -35,10 +35,18 @@ export const metadata: Metadata = {
 
 export default async function Home() {
   const [categories, featuredProducts, banners] = await Promise.all([
-    getCategories(8),
+    getCategories(),
     getFeaturedProducts(8),
     getActiveBanners(),
   ])
+
+  // Fetch products for each category
+  const categoriesWithProducts = await Promise.all(
+    categories.map(async (category) => ({
+      ...category,
+      products: await getProductsByCategory(category.id, 10)
+    }))
+  )
 
   return (
     <ErrorBoundary>
@@ -89,7 +97,8 @@ export default async function Home() {
         <HomeClient 
           categories={categories} 
           featuredProducts={featuredProducts} 
-          banners={banners} 
+          banners={banners}
+          categoriesWithProducts={categoriesWithProducts}
         />
       </div>
     </ErrorBoundary>

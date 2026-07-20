@@ -40,9 +40,10 @@ interface HomeClientProps {
   categories: Category[]
   featuredProducts: Product[]
   banners: Banner[]
+  categoriesWithProducts?: (Category & { products: Product[] })[]
 }
 
-export default function HomeClient({ categories, featuredProducts, banners }: HomeClientProps) {
+export default function HomeClient({ categories, featuredProducts, banners, categoriesWithProducts }: HomeClientProps) {
   const [currentSlide, setCurrentSlide] = useState(0)
   const [instagramPosts, setInstagramPosts] = useState<{imageUrl: string, postUrl: string}[]>([])
   const [reviewWidgetHtml, setReviewWidgetHtml] = useState<string>('')
@@ -313,12 +314,12 @@ export default function HomeClient({ categories, featuredProducts, banners }: Ho
       </section>
 
       {/* Vibrant CTA Section */}
-      <section className="section-spacing relative overflow-hidden mx-4 md:mx-8 mb-8 md:mb-16 rounded-[2rem] md:rounded-[3rem] bg-brand-purple">
+      <section className="py-12 md:py-16 relative overflow-hidden mx-4 md:mx-8 mb-8 md:mb-12 rounded-[2rem] md:rounded-[3rem] bg-brand-purple">
         {/* Animated Background blobs */}
         <motion.div animate={{ rotate: 360 }} transition={{ duration: 20, repeat: Infinity, ease: "linear" }} className="absolute -top-64 -right-64 w-[500px] h-[500px] bg-brand-pink rounded-full mix-blend-multiply filter blur-3xl opacity-70"></motion.div>
         <motion.div animate={{ rotate: -360 }} transition={{ duration: 25, repeat: Infinity, ease: "linear" }} className="absolute -bottom-64 -left-64 w-[500px] h-[500px] bg-brand-orange rounded-full mix-blend-multiply filter blur-3xl opacity-70"></motion.div>
 
-        <div className="container-premium relative z-10 text-center px-4 py-12 md:py-20">
+        <div className="container-premium relative z-10 text-center px-4 py-8 md:py-12">
           <motion.h2 
             initial={{ scale: 0.9, opacity: 0 }} whileInView={{ scale: 1, opacity: 1 }} viewport={{ once: true }}
             className="text-display text-white mb-6 drop-shadow-xl"
@@ -327,7 +328,7 @@ export default function HomeClient({ categories, featuredProducts, banners }: Ho
           </motion.h2>
           <motion.p 
             initial={{ y: 20, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.2 }}
-            className="text-body-large text-white/90 mb-10 max-w-2xl mx-auto drop-shadow-md"
+            className="text-body-large text-white/90 mb-8 max-w-2xl mx-auto drop-shadow-md"
           >
             Can't find exactly what you're looking for? Let's create a custom masterpiece from your favorite photos.
           </motion.p>
@@ -343,6 +344,104 @@ export default function HomeClient({ categories, featuredProducts, banners }: Ho
           </motion.div>
         </div>
       </section>
+
+      {/* Category Product Sections */}
+      {categoriesWithProducts && categoriesWithProducts.map((category, categoryIndex) => (
+        category.products.length > 0 && (
+          <section key={category.id} className="py-8 md:py-12 bg-white relative overflow-hidden">
+            <div className="container-premium">
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-100px" }}
+                className="flex flex-col md:flex-row md:items-end justify-between mb-6 md:mb-8 gap-4"
+              >
+                <div>
+                  <h2 className="text-heading-1 text-foreground mb-2">
+                    {category.name}
+                  </h2>
+                  <p className="text-body-large text-muted-foreground max-w-xl">
+                    Discover our collection of {category.name.toLowerCase()} gifts
+                  </p>
+                </div>
+                <Link href={`/categories/${category.slug}`} className="hidden md:block">
+                  <Button className="btn-outline-premium rounded-full text-lg px-8 py-6">
+                    View All <ArrowRight className="ml-2 w-5 h-5" />
+                  </Button>
+                </Link>
+              </motion.div>
+
+              {/* Horizontal Scrollable Product Row */}
+              <div className="relative">
+                <div className="flex gap-4 md:gap-6 overflow-x-auto pb-4 md:pb-6 scrollbar-hide snap-x snap-mandatory">
+                  {category.products.map((product, index) => (
+                    <motion.div 
+                      key={product.id}
+                      initial={{ opacity: 0, x: 20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true, margin: "-50px" }}
+                      transition={{ delay: index * 0.05 }}
+                      className="flex-shrink-0 w-[45vw] md:w-[28vw] lg:w-[22vw] snap-start"
+                    >
+                      <Link href={`/products/${product.id}`} className="block group">
+                        <article className="premium-card bg-white h-full flex flex-col group-hover:-translate-y-2 group-hover:shadow-2xl transition-all duration-300 border border-transparent group-hover:border-gray-100">
+                          <div className="relative aspect-[4/5] overflow-hidden rounded-t-[22px]">
+                            {(product.image_urls?.[0] || product.variants?.[0]?.images?.[0]) ? (
+                              <Image
+                                src={product.image_urls?.[0] || product.variants?.[0]?.images?.[0] || ''}
+                                alt={product.name}
+                                fill
+                                className="object-cover transition-transform duration-700 group-hover:scale-110"
+                                sizes="(max-width: 640px) 45vw, (max-width: 1024px) 28vw, 22vw"
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                                <Camera className="w-12 h-12 text-gray-300" />
+                              </div>
+                            )}
+                          </div>
+                          
+                          <div className="p-4 md:p-5 flex-1 flex flex-col">
+                            <h3 className="text-heading-3 text-foreground mb-2 group-hover:text-brand-pink transition-colors line-clamp-2 capitalize">
+                              {product.name}
+                            </h3>
+                            <div className="flex items-center mt-auto pt-3 border-t border-gray-100">
+                              <div className="flex flex-col w-full">
+                                {product.mrp && product.mrp > product.price ? (
+                                  <div className="flex items-baseline gap-2 flex-wrap">
+                                    <span className="text-sm font-bold text-gray-400 line-through whitespace-nowrap">
+                                      {formatPrice(product.mrp)}
+                                    </span>
+                                    <span className="font-heading text-lg md:text-xl font-bold text-foreground whitespace-nowrap">
+                                      {formatPrice(product.price)}
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <p className="font-heading text-lg md:text-xl font-bold text-foreground whitespace-nowrap">
+                                    {formatPrice(product.price)}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </article>
+                      </Link>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="text-center mt-4 md:hidden">
+                <Link href={`/categories/${category.slug}`}>
+                  <Button className="btn-outline-premium rounded-full w-full text-lg py-6">
+                    View All {category.name}
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </section>
+        )
+      ))}
 
       {/* Customer Reviews Section */}
       {reviewWidgetHtml && (
