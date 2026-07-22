@@ -26,6 +26,8 @@ interface UnifiedOrder {
   notes: string | null
   tracking_number?: string
   admin_remarks?: string
+  cancellation_reason?: string
+  cancelled_at?: string
   user_profiles?: {
     first_name: string
     last_name: string
@@ -72,6 +74,9 @@ export default function OrdersPage() {
     tracking_number: '',
     admin_remarks: ''
   })
+  const [cancelReason, setCancelReason] = useState('')
+  const [showCancelModal, setShowCancelModal] = useState(false)
+  const [orderToCancel, setOrderToCancel] = useState<UnifiedOrder | null>(null)
   const [modalState, setModalState] = useState<{isOpen: boolean, title: string, message: string, type: 'error'|'success'|'info'}>({
     isOpen: false, title: '', message: '', type: 'info'
   })
@@ -242,6 +247,46 @@ export default function OrdersPage() {
     }
   }
 
+  const handleCancelOrder = async () => {
+    if (!orderToCancel || !cancelReason.trim()) {
+      setModalState({
+        isOpen: true,
+        title: 'Error',
+        message: 'Please provide a reason for cancellation',
+        type: 'error'
+      })
+      return
+    }
+
+    try {
+      const collectionName = orderToCancel.orderType === 'custom' ? 'custom_orders' : 'orders'
+      await updateDoc(doc(db, collectionName, orderToCancel.id), {
+        status: 'cancelled',
+        cancellation_reason: cancelReason,
+        cancelled_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      setModalState({
+        isOpen: true,
+        title: 'Success',
+        message: 'Order cancelled successfully',
+        type: 'success'
+      })
+      setShowCancelModal(false)
+      setCancelReason('')
+      setOrderToCancel(null)
+      await fetchOrders()
+    } catch (error) {
+      console.error('Error cancelling order:', error)
+      setModalState({
+        isOpen: true,
+        title: 'Error',
+        message: 'Failed to cancel order. Please try again.',
+        type: 'error'
+      })
+    }
+  }
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'delivered': 
@@ -393,6 +438,17 @@ export default function OrdersPage() {
                           className="inline-flex items-center px-4 py-2 bg-green-50 text-green-600 hover:bg-green-600 hover:text-white rounded-xl font-bold text-sm transition-colors"
                         >
                           <CheckCircle className="h-4 w-4 mr-2" /> Deliver
+                        </button>
+                      )}
+                      {order.status !== 'cancelled' && (
+                        <button
+                          onClick={() => {
+                            setOrderToCancel(order)
+                            setShowCancelModal(true)
+                          }}
+                          className="inline-flex items-center px-4 py-2 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded-xl font-bold text-sm transition-colors"
+                        >
+                          <XCircle className="h-4 w-4 mr-2" /> Cancel
                         </button>
                       )}
                     </div>
@@ -617,6 +673,21 @@ export default function OrdersPage() {
                 </div>
               )}
 
+              {/* Cancellation Info */}
+              {selectedOrder.status === 'cancelled' && (
+                <div className="premium-card bg-red-50/50 p-6 border border-red-100">
+                  <h3 className="text-sm font-bold text-red-800 uppercase tracking-wider mb-2">Cancellation Details</h3>
+                  <p className="text-red-900 font-medium mb-2">
+                    <span className="font-bold">Reason:</span> {selectedOrder.cancellation_reason || 'Not specified'}
+                  </p>
+                  {selectedOrder.cancelled_at && (
+                    <p className="text-red-900 font-medium">
+                      <span className="font-bold">Cancelled on:</span> {new Date(selectedOrder.cancelled_at).toLocaleString()}
+                    </p>
+                  )}
+                </div>
+              )}
+
               {/* Admin Controls (Unified) */}
               <div className="premium-card bg-brand-purple/5 p-6 border border-brand-purple/20">
                 <h3 className="text-sm font-bold text-brand-purple uppercase tracking-wider mb-4 flex items-center">
@@ -692,6 +763,41 @@ export default function OrdersPage() {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cancel Order Modal */}
+      {showCancelModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl">
+            <h3 className="text-2xl font-heading font-bold text-gray-900 mb-4">Cancel Order</h3>
+            <p className="text-gray-600 mb-6">Please provide a reason for cancelling this order:</p>
+            <textarea
+              rows={4}
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              placeholder="Enter cancellation reason..."
+              className="w-full px-5 py-3 border-2 border-gray-100 rounded-2xl focus:outline-none focus:border-brand-purple focus:ring-4 focus:ring-brand-purple/10 bg-white text-gray-900 font-medium transition-all mb-6"
+            />
+            <div className="flex gap-4 justify-end">
+              <button
+                onClick={() => {
+                  setShowCancelModal(false)
+                  setCancelReason('')
+                  setOrderToCancel(null)
+                }}
+                className="px-6 py-3 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-full font-bold transition-colors"
+              >
+                Back
+              </button>
+              <button
+                onClick={handleCancelOrder}
+                className="px-6 py-3 bg-red-500 text-white hover:bg-red-600 rounded-full font-bold transition-colors"
+              >
+                Confirm Cancel
+              </button>
             </div>
           </div>
         </div>

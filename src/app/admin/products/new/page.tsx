@@ -38,7 +38,11 @@ export default function NewProductPage() {
     sku: '',
     featured: false,
     on_sale: false,
-    order: undefined as number | undefined
+    order: undefined as number | undefined,
+    customization_required: {
+      text: false,
+      images: false
+    }
   })
   const [modalState, setModalState] = useState<{isOpen: boolean, title: string, message: string, type: 'error'|'success'|'info'}>({
     isOpen: false, title: '', message: '', type: 'info'
@@ -73,7 +77,11 @@ export default function NewProductPage() {
           sku: data.sku || '',
           featured: data.featured || false,
           on_sale: data.on_sale || false,
-          order: data.order
+          order: data.order,
+          customization_required: data.customization_required || {
+            text: false,
+            images: false
+          }
         })
         if (data.image_urls) {
           setUploadedImages(data.image_urls)
@@ -290,6 +298,7 @@ export default function NewProductPage() {
         featured: formData.featured,
         is_active: true,
         order: order,
+        customization_required: formData.customization_required,
         ...(productId ? {} : { created_at: new Date().toISOString() }),
         updated_at: new Date().toISOString()
       }
@@ -482,6 +491,50 @@ export default function NewProductPage() {
             <label htmlFor="featured" className="text-sm font-bold text-yellow-800">
               Featured Product (Shows up on the homepage)
             </label>
+          </div>
+        </div>
+
+        {/* Customization Requirements */}
+        <div className="premium-card bg-white p-8">
+          <h2 className="text-heading-3 text-gray-900 mb-6">Customer Customization Requirements</h2>
+          <p className="text-sm text-gray-600 mb-4">Select what customers need to provide when ordering this product</p>
+          <div className="space-y-4">
+            <div className="flex items-center bg-blue-50 p-4 rounded-2xl border border-blue-100">
+              <input
+                type="checkbox"
+                id="custom_text"
+                checked={formData.customization_required.text}
+                onChange={(e) => setFormData({
+                  ...formData,
+                  customization_required: {
+                    ...formData.customization_required,
+                    text: e.target.checked
+                  }
+                })}
+                className="w-5 h-5 text-brand-blue rounded border-gray-300 focus:ring-brand-blue mr-3"
+              />
+              <label htmlFor="custom_text" className="text-sm font-bold text-blue-800">
+                Custom Text (Customer needs to provide custom text/names)
+              </label>
+            </div>
+            <div className="flex items-center bg-green-50 p-4 rounded-2xl border border-green-100">
+              <input
+                type="checkbox"
+                id="custom_images"
+                checked={formData.customization_required.images}
+                onChange={(e) => setFormData({
+                  ...formData,
+                  customization_required: {
+                    ...formData.customization_required,
+                    images: e.target.checked
+                  }
+                })}
+                className="w-5 h-5 text-brand-green rounded border-gray-300 focus:ring-brand-green mr-3"
+              />
+              <label htmlFor="custom_images" className="text-sm font-bold text-green-800">
+                Custom Images (Customer needs to upload images)
+              </label>
+            </div>
           </div>
         </div>
 

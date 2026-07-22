@@ -30,6 +30,10 @@ export interface Product {
   weight?: number
   sku?: string
   order?: number
+  customization_required?: {
+    text: boolean
+    images: boolean
+  }
   categories?: {
     id: string
     name: string

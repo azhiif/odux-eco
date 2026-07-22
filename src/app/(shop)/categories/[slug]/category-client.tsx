@@ -141,9 +141,22 @@ export default function CategoryClient({ category, initialProducts }: CategoryCl
                     </p>
                     
                     <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-100">
-                      <p className="font-heading text-xl font-bold text-foreground">
-                        {formatPrice(product.price)}
-                      </p>
+                      <div className="flex flex-col">
+                        {product.mrp && product.mrp > product.price ? (
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-sm font-bold text-gray-400 line-through">
+                              {formatPrice(product.mrp)}
+                            </span>
+                            <span className="font-heading text-xl font-bold text-foreground">
+                              {formatPrice(product.price)}
+                            </span>
+                          </div>
+                        ) : (
+                          <p className="font-heading text-xl font-bold text-foreground">
+                            {formatPrice(product.price)}
+                          </p>
+                        )}
+                      </div>
                       <button 
                         className="md:hidden w-10 h-10 rounded-full bg-pink-50 text-brand-pink flex items-center justify-center hover:bg-brand-pink hover:text-white transition-colors"
                         onClick={(e) => handleAddToCart(product.id, e)}

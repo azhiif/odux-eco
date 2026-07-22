@@ -514,9 +514,22 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
                       <h3 className="font-heading text-lg font-bold text-gray-800 group-hover:text-brand-pink transition-colors line-clamp-1 mb-2">
                         {relatedProduct.name}
                       </h3>
-                      <p className="text-xl font-bold text-brand-purple">
-                        {formatPrice(relatedProduct.price)}
-                      </p>
+                      <div className="flex flex-col items-center">
+                        {relatedProduct.mrp && relatedProduct.mrp > relatedProduct.price ? (
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-sm font-bold text-gray-400 line-through">
+                              {formatPrice(relatedProduct.mrp)}
+                            </span>
+                            <span className="text-xl font-bold text-brand-purple">
+                              {formatPrice(relatedProduct.price)}
+                            </span>
+                          </div>
+                        ) : (
+                          <p className="text-xl font-bold text-brand-purple">
+                            {formatPrice(relatedProduct.price)}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </article>
                 </Link>
