@@ -24,6 +24,7 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
   const [selectedImage, setSelectedImage] = useState(0)
   const [quantity, setQuantity] = useState(1)
   const [uploadedImages, setUploadedImages] = useState<string[]>([])
+  const [customText, setCustomText] = useState('')
   const [uploading, setUploading] = useState(false)
   const [showUploadModal, setShowUploadModal] = useState(false)
   const [modalState, setModalState] = useState<{ isOpen: boolean, title: string, message: string, type: 'error' | 'success' | 'info' }>({
@@ -166,11 +167,33 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
 
   const addToCart = async () => {
     try {
+      // Validate required customizations
+      if (product.customization_required?.text && !customText.trim()) {
+        setModalState({
+          isOpen: true,
+          title: 'Custom Text Required',
+          message: 'Please provide the custom text for this product.',
+          type: 'error'
+        })
+        return
+      }
+
+      if (product.customization_required?.images && uploadedImages.length === 0) {
+        setModalState({
+          isOpen: true,
+          title: 'Photo Required',
+          message: 'Please upload a photo for this product.',
+          type: 'error'
+        })
+        return
+      }
+
       const user = auth.currentUser
       const cartItemData = {
         product_id: product.id,
         quantity: quantity,
         customerUploads: uploadedImages,
+        customText: customText,
         variantId: selectedVariant?.id || null,
         variantSnapshot: selectedVariant ? {
           type: selectedVariant.type,
@@ -406,6 +429,42 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
                 </div>
               )}
 
+              {/* Custom Text Input - Show if product requires text */}
+              {product.customization_required?.text && (
+                <div className="mb-6 space-y-4">
+                  <h3 className="text-lg font-bold text-gray-900">Custom Text Required</h3>
+                  <textarea
+                    value={customText}
+                    onChange={(e) => setCustomText(e.target.value)}
+                    placeholder="Enter your custom text (name, message, etc.)"
+                    rows={3}
+                    className="w-full px-5 py-4 border-2 border-gray-100 rounded-2xl focus:outline-none focus:border-brand-purple focus:ring-4 focus:ring-brand-purple/10 bg-white text-gray-900 font-medium transition-all resize-none"
+                  />
+                  <p className="text-sm text-gray-500">Please provide the custom text you'd like on your product.</p>
+                </div>
+              )}
+
+              {/* Custom Photo Upload Card - Show if product requires images */}
+              {product.customization_required?.images && (
+                <motion.div
+                  whileHover={{ y: -5 }}
+                  className="bg-gradient-to-br from-brand-pink to-brand-orange p-1 rounded-[2rem] shadow-2xl mb-8"
+                >
+                  <div className="bg-white rounded-[1.8rem] p-6 md:p-8 flex flex-col sm:flex-row items-center gap-6">
+                    <div className="w-16 h-16 rounded-full bg-pink-100 flex items-center justify-center shrink-0">
+                      <Camera className="w-8 h-8 text-brand-pink" />
+                    </div>
+                    <div className="flex-1 text-center sm:text-left">
+                      <h3 className="text-xl font-bold text-gray-800 mb-1">Upload Your Photo</h3>
+                      <p className="text-sm text-gray-600">This product requires a photo for customization.</p>
+                    </div>
+                    <Button onClick={() => setShowUploadModal(true)} className="btn-outline-premium rounded-full px-6 py-4 w-full sm:w-auto shrink-0">
+                      Upload Photo
+                    </Button>
+                  </div>
+                </motion.div>
+              )}
+
               <div className="flex flex-col sm:flex-row gap-4 mb-8">
                 <div className="flex-1 bg-gray-50 rounded-full p-2 flex items-center border-2 border-gray-100">
                   <span className="text-gray-500 font-bold px-4">Qty</span>
@@ -455,25 +514,6 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
               </div>
             </div>
           </div>
-
-          {/* Custom Photo Upload Card */}
-          <motion.div
-            whileHover={{ y: -5 }}
-            className="bg-gradient-to-br from-brand-pink to-brand-orange p-1 rounded-[2rem] shadow-2xl"
-          >
-            <div className="bg-white rounded-[1.8rem] p-6 md:p-8 flex flex-col sm:flex-row items-center gap-6">
-              <div className="w-16 h-16 rounded-full bg-pink-100 flex items-center justify-center shrink-0">
-                <Camera className="w-8 h-8 text-brand-pink" />
-              </div>
-              <div className="flex-1 text-center sm:text-left">
-                <h3 className="text-xl font-bold text-gray-800 mb-1">Make it Yours</h3>
-                <p className="text-sm text-gray-600">Upload your own photo for a fully personalized art piece!</p>
-              </div>
-              <Button onClick={() => setShowUploadModal(true)} className="btn-outline-premium rounded-full px-6 py-4 w-full sm:w-auto shrink-0">
-                Upload Photo
-              </Button>
-            </div>
-          </motion.div>
         </motion.div>
       </div>
 
