@@ -13,6 +13,7 @@ export interface PaymentOptions {
   theme?: {
     color?: string
   }
+  key?: string
 }
 
 export async function openPaymentModal(options: PaymentOptions) {
@@ -28,7 +29,7 @@ export async function openPaymentModal(options: PaymentOptions) {
   }
 
   const rzp = new RazorpaySDK({
-    key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+    key: options.key || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
     amount: options.amount,
     currency: options.currency,
     name: options.name,

@@ -66,9 +66,12 @@ service cloud.firestore {
     }
 
     // Settings
-    match /settings/{document=**} {
+    match /settings/general {
       allow read: if true;
       allow write: if isAdmin();
+    }
+    match /settings/secrets {
+      allow read, write: if isAdmin();
     }
 
     // Contact Messages

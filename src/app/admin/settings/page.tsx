@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { db } from '@/lib/firebase'
-import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore'
+import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { Settings, Save, Loader2, Shield, Bell, Palette, Globe, Mail, Phone, Instagram, Facebook } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { Modal } from '@/components/ui/modal'
@@ -20,6 +20,10 @@ export default function AdminSettingsPage() {
     instagramPosts: [] as { imageUrl: string, postUrl: string }[],
     reviewWidgetHtml: '',
   })
+  const [secretSettings, setSecretSettings] = useState({
+    razorpayKeyId: '',
+    razorpayKeySecret: '',
+  })
   const [modalState, setModalState] = useState<{isOpen: boolean, title: string, message: string, type: 'error'|'success'|'info'}>({
     isOpen: false, title: '', message: '', type: 'info'
   })
@@ -30,9 +34,19 @@ export default function AdminSettingsPage() {
 
   const fetchSettings = async () => {
     try {
-      const settingsDoc = await getDoc(doc(db, 'settings', 'general'))
-      if (settingsDoc.exists()) {
-        setSettings(settingsDoc.data() as any)
+      const [generalDoc, secretsDoc] = await Promise.all([
+        getDoc(doc(db, 'settings', 'general')),
+        getDoc(doc(db, 'settings', 'secrets'))
+      ])
+      
+      if (generalDoc.exists()) {
+        setSettings(generalDoc.data() as typeof settings)
+      }
+      if (secretsDoc.exists()) {
+        setSecretSettings({
+          razorpayKeyId: secretsDoc.data().razorpayKeyId || '',
+          razorpayKeySecret: secretsDoc.data().razorpayKeySecret || ''
+        })
       }
     } catch (error) {
       console.error('Error fetching settings:', error)
@@ -44,10 +58,17 @@ export default function AdminSettingsPage() {
   const handleSave = async () => {
     setSaving(true)
     try {
-      await setDoc(doc(db, 'settings', 'general'), {
-        ...settings,
-        updated_at: new Date().toISOString(),
-      }, { merge: true })
+      await Promise.all([
+        setDoc(doc(db, 'settings', 'general'), {
+          ...settings,
+          updated_at: new Date().toISOString(),
+        }, { merge: true }),
+        setDoc(doc(db, 'settings', 'secrets'), {
+          ...secretSettings,
+          updated_at: new Date().toISOString(),
+        }, { merge: true })
+      ])
+      
       setModalState({
         isOpen: true,
         title: 'Success',
@@ -216,7 +237,47 @@ export default function AdminSettingsPage() {
             </div>
           </motion.div>
 
-
+          {/* Payment Gateway */}
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.28 }}>
+            <div className="premium-card bg-white p-6">
+              <h2 className="text-heading-3 text-gray-900 mb-6 flex items-center">
+                <div className="w-10 h-10 bg-indigo-50 text-indigo-500 rounded-xl flex items-center justify-center mr-4">
+                  <Shield className="h-5 w-5" />
+                </div>
+                Payment Gateway (Razorpay)
+              </h2>
+              
+              <div className="space-y-5">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center">
+                    Razorpay Key ID
+                  </label>
+                  <input
+                    value={secretSettings.razorpayKeyId}
+                    onChange={(e) => setSecretSettings({ ...secretSettings, razorpayKeyId: e.target.value })}
+                    className="form-input"
+                    placeholder="rzp_live_..."
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center">
+                    Razorpay Key Secret
+                  </label>
+                  <input
+                    type="password"
+                    value={secretSettings.razorpayKeySecret}
+                    onChange={(e) => setSecretSettings({ ...secretSettings, razorpayKeySecret: e.target.value })}
+                    className="form-input"
+                    placeholder="Enter Key Secret"
+                  />
+                  <p className="text-xs text-gray-500 mt-2">
+                    Stored securely. Required for backend signature verification.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
 
           {/* Security & Notifications */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>

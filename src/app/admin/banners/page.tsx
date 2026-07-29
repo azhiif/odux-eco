@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { storage } from '@/lib/firebase'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { getBanners, createBanner, updateBanner, deleteBanner } from '@/lib/banner'
-import { Image as ImageIcon, Plus, Edit, Trash2, Camera, Upload, Eye, EyeOff, X, Loader2, PlaySquare } from 'lucide-react'
+import { Image as ImageIcon, Plus, Edit, Trash2, Camera, Upload, Eye, EyeOff, X, Loader2, PlaySquare, ChevronUp, ChevronDown } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Modal } from '@/components/ui/modal'
 
@@ -51,11 +51,54 @@ export default function BannersPage() {
   const fetchBanners = async () => {
     try {
       const data = await getBanners()
-      setBanners(data)
+      // Sort banners by sort_order
+      setBanners(data.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)))
     } catch (error) {
       console.error('Error fetching banners:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const moveBannerUp = async (index: number) => {
+    if (index === 0) return
+    const newBanners = [...banners]
+    const temp = newBanners[index]
+    newBanners[index] = newBanners[index - 1]
+    newBanners[index - 1] = temp
+    
+    newBanners.forEach((banner, idx) => {
+      banner.sort_order = idx
+    })
+    
+    setBanners(newBanners)
+    
+    try {
+      await updateBanner(newBanners[index].id, { sort_order: index })
+      await updateBanner(newBanners[index - 1].id, { sort_order: index - 1 })
+    } catch (error) {
+      console.error('Error updating banner order:', error)
+    }
+  }
+
+  const moveBannerDown = async (index: number) => {
+    if (index === banners.length - 1) return
+    const newBanners = [...banners]
+    const temp = newBanners[index]
+    newBanners[index] = newBanners[index + 1]
+    newBanners[index + 1] = temp
+    
+    newBanners.forEach((banner, idx) => {
+      banner.sort_order = idx
+    })
+    
+    setBanners(newBanners)
+    
+    try {
+      await updateBanner(newBanners[index].id, { sort_order: index })
+      await updateBanner(newBanners[index + 1].id, { sort_order: index + 1 })
+    } catch (error) {
+      console.error('Error updating banner order:', error)
     }
   }
 
@@ -384,7 +427,25 @@ export default function BannersPage() {
                         )}
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Order:</span>
-                          <span className="text-sm font-bold text-gray-900">{banner.sort_order}</span>
+                          <span className="text-sm font-bold text-gray-900 mr-4">{banner.sort_order}</span>
+                          <div className="flex gap-1">
+                            <button
+                              onClick={() => moveBannerUp(i)}
+                              disabled={i === 0}
+                              className="w-7 h-7 bg-white hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed rounded-md flex items-center justify-center transition-colors border border-gray-200"
+                              title="Move up"
+                            >
+                              <ChevronUp className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => moveBannerDown(i)}
+                              disabled={i === banners.length - 1}
+                              className="w-7 h-7 bg-white hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed rounded-md flex items-center justify-center transition-colors border border-gray-200"
+                              title="Move down"
+                            >
+                              <ChevronDown className="h-4 w-4" />
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>

@@ -225,12 +225,28 @@ export default function CheckoutPage() {
       })
       await batch.commit()
 
+      // Create Razorpay Order
+      const rzpResponse = await fetch('/api/payment/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: totalAmount,
+          receipt: orderRef.id,
+        })
+      })
+      const rzpData = await rzpResponse.json()
+      
+      if (!rzpData.success) {
+        throw new Error(rzpData.error || 'Failed to create payment order')
+      }
+
       await openPaymentModal({
         amount: totalAmount * 100,
         currency: 'INR',
         name: 'Odux Art Magic',
         description: `Order for ${cartItems.length} magical items`,
-        order_id: orderRef.id,
+        order_id: rzpData.orderId,
+        key: rzpData.keyId,
         prefill: {
           name: `${shippingAddress.first_name} ${shippingAddress.last_name}`,
           email: shippingAddress.email,
@@ -240,11 +256,39 @@ export default function CheckoutPage() {
           color: '#ff477e'
         },
         handler: async (response: any) => {
-          await updateDoc(doc(db, 'orders', orderRef.id), {
-            status: 'processing',
-            payment_status: 'paid',
-            razorpay_payment_id: response.razorpay_payment_id
-          })
+          try {
+            const user = auth.currentUser
+            let token = ''
+            if (user) {
+              token = await user.getIdToken()
+            }
+            
+            const verifyRes = await fetch('/api/payment/verify', {
+              method: 'POST',
+              headers: { 
+                'Content-Type': 'application/json',
+                ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+              },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id || rzpData.orderId,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                firebase_order_id: orderRef.id
+              })
+            })
+            const verifyData = await verifyRes.json()
+            if (!verifyData.success) throw new Error(verifyData.error)
+          } catch (error) {
+            console.error('Payment verification failed:', error)
+            setModalState({
+              isOpen: true,
+              title: 'Verification Failed',
+              message: 'Your payment could not be verified. Please contact support.',
+              type: 'error'
+            })
+            setProcessing(false)
+            return
+          }
           
           // Trigger Admin Email Notification
           try {
@@ -271,16 +315,25 @@ export default function CheckoutPage() {
         modal: {
           ondismiss: async function() {
             try {
-              await deleteDoc(doc(db, 'orders', orderRef.id))
-              const itemsQ = query(collection(db, 'order_items'), where('order_id', '==', orderRef.id))
-              const itemsSnap = await getDocs(itemsQ)
-              const deleteBatch = writeBatch(db)
-              itemsSnap.docs.forEach(doc => {
-                deleteBatch.delete(doc.ref)
+              const user = auth.currentUser
+              let token = ''
+              if (user) {
+                token = await user.getIdToken()
+              }
+
+              await fetch('/api/payment/verify', {
+                method: 'POST',
+                headers: { 
+                  'Content-Type': 'application/json',
+                  ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                },
+                body: JSON.stringify({
+                  firebase_order_id: orderRef.id,
+                  isFailure: true
+                })
               })
-              await deleteBatch.commit()
             } catch (error) {
-              console.error('Error cleaning up cancelled order:', error)
+              console.error('Error updating cancelled order:', error)
             }
             setProcessing(false)
           }
@@ -298,16 +351,25 @@ export default function CheckoutPage() {
       setProcessing(false)
       if (orderRef) {
         try {
-          await deleteDoc(doc(db, 'orders', orderRef.id))
-          const itemsQ = query(collection(db, 'order_items'), where('order_id', '==', orderRef.id))
-          const itemsSnap = await getDocs(itemsQ)
-          const deleteBatch = writeBatch(db)
-          itemsSnap.docs.forEach(doc => {
-            deleteBatch.delete(doc.ref)
+          const user = auth.currentUser
+          let token = ''
+          if (user) {
+            token = await user.getIdToken()
+          }
+
+          await fetch('/api/payment/verify', {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+            },
+            body: JSON.stringify({
+              firebase_order_id: orderRef.id,
+              isFailure: true
+            })
           })
-          await deleteBatch.commit()
         } catch (cleanupError) {
-          console.error('Error cleaning up failed order:', cleanupError)
+          console.error('Error updating failed order:', cleanupError)
         }
       }
     }
