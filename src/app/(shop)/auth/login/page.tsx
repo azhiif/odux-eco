@@ -97,7 +97,7 @@ function LoginContent() {
       router.push('/')
     } catch (error: any) {
       console.error('Google Auth Error:', error)
-      setError('Google sign-in failed. Please try again.')
+      setError(`Google sign-in failed: ${error.message || 'Unknown error'}`)
     } finally {
       setLoading(false)
     }
