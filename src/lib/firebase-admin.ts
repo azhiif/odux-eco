@@ -9,7 +9,21 @@ if (!getApps().length) {
       throw new Error('FIREBASE_SERVICE_ACCOUNT_KEY is missing in environment variables.')
     }
     
-    const credential = JSON.parse(serviceAccountKey)
+    let credential;
+    try {
+      // Sometimes Next.js or shell strips the outer curly braces
+      let keyToParse = serviceAccountKey.trim();
+      if (keyToParse.startsWith('"type"')) {
+        keyToParse = '{' + keyToParse + '}';
+      }
+      credential = JSON.parse(keyToParse);
+    } catch (parseError) {
+      console.error('Firebase Admin init error: Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY.');
+      console.error('Raw value length:', serviceAccountKey.length);
+      console.error('Raw value starts with:', serviceAccountKey.substring(0, 20));
+      throw parseError;
+    }
+
     if (credential.private_key) {
       credential.private_key = credential.private_key.replace(/\\n/g, '\n')
     }
