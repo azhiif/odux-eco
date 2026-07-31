@@ -46,11 +46,15 @@ export async function POST(req: Request) {
   } catch (error: unknown) {
     console.error('Error in create-order API:', error)
     let message = 'Failed to create payment order'
-    if (error instanceof Error) {
-      message = error.message
-    } else if (typeof error === 'object' && error !== null && 'error' in error) {
-      const errObj = (error as any).error
-      message = errObj.description || errObj.message || message
+    try {
+      if (error instanceof Error) {
+        message = error.message
+      } else if (typeof error === 'object' && error !== null && 'error' in error) {
+        const errObj = (error as any).error
+        message = errObj?.description || errObj?.message || message
+      }
+    } catch (e) {
+      console.error('Error extracting error message:', e)
     }
     return NextResponse.json(
       { error: message },
