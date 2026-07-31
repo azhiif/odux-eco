@@ -73,7 +73,7 @@ export async function POST(req: Request) {
     }
 
     const data = secretsDoc.data()
-    const razorpayKeySecret = data?.razorpayKeySecret
+    const razorpayKeySecret = data?.razorpayKeySecret?.trim()
     if (!razorpayKeySecret) {
       throw new Error('Payment gateway key secret is missing.')
     }
