@@ -21,8 +21,8 @@ export async function POST(req: Request) {
     }
 
     const data = secretsDoc.data()
-    const razorpayKeyId = data?.razorpayKeyId
-    const razorpayKeySecret = data?.razorpayKeySecret
+    const razorpayKeyId = data?.razorpayKeyId?.trim()
+    const razorpayKeySecret = data?.razorpayKeySecret?.trim()
     if (!razorpayKeyId || !razorpayKeySecret) {
       throw new Error('Payment gateway keys are missing.')
     }
@@ -33,7 +33,7 @@ export async function POST(req: Request) {
     })
 
     const order = await razorpay.orders.create({
-      amount: amount * 100, // Razorpay expects paise
+      amount: Math.round(amount * 100), // Razorpay expects paise as integer
       currency: 'INR',
       receipt,
       notes: {

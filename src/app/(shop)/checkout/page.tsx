@@ -345,7 +345,7 @@ export default function CheckoutPage() {
       setModalState({
         isOpen: true,
         title: 'Payment Failed',
-        message: 'Something went wrong with the payment. Please try again.',
+        message: error instanceof Error ? error.message : 'Something went wrong with the payment. Please try again.',
         type: 'error'
       })
       setProcessing(false)
