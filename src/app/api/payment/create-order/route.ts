@@ -45,7 +45,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true, orderId: order.id, keyId: razorpayKeyId, order })
   } catch (error: unknown) {
     console.error('Error in create-order API:', error)
-    const message = error instanceof Error ? error.message : 'Failed to create payment order'
+    let message = 'Failed to create payment order'
+    if (error instanceof Error) {
+      message = error.message
+    } else if (typeof error === 'object' && error !== null && 'error' in error) {
+      const errObj = (error as any).error
+      message = errObj.description || errObj.message || message
+    }
     return NextResponse.json(
       { error: message },
       { status: 500 }

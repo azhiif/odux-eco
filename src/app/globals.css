@@ -307,3 +307,11 @@ html {
   font-size: 0.875rem;
   line-height: 1.5;
 }
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

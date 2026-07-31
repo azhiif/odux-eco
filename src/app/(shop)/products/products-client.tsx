@@ -173,10 +173,18 @@ export default function ProductsClient({ initialProducts, categories }: Products
               variants={containerVariants}
               initial="hidden"
               animate="show"
-              className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8 mb-12"
+              className={
+                currentProducts.length > 4
+                  ? "flex overflow-x-auto snap-x snap-mandatory gap-4 md:gap-8 pb-8 mb-12 hide-scrollbar -mx-4 px-4 md:mx-0 md:px-0"
+                  : "grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8 mb-12"
+              }
             >
               {currentProducts.map((product) => (
-                <motion.div key={product.id} variants={itemVariants} className="h-full">
+                <motion.div 
+                  key={product.id} 
+                  variants={itemVariants} 
+                  className={currentProducts.length > 4 ? "w-[85vw] sm:w-[45vw] md:w-[30vw] lg:w-[calc(25%-1.5rem)] shrink-0 snap-start h-full" : "h-full"}
+                >
                   <Link href={`/products/${product.id}`} className="block group h-full">
                     <article className="premium-card bg-white h-full flex flex-col group-hover:-translate-y-2 group-hover:shadow-2xl transition-all duration-300 border border-transparent group-hover:border-gray-100 overflow-visible">
                       <div className="relative aspect-[4/5] overflow-hidden rounded-t-[22px] bg-gray-50">
