@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 import withPWA from "next-pwa";
 
 const nextConfig = {
+  serverExternalPackages: ['firebase-admin'],
   turbopack: {},
   images: {
     formats: ['image/avif', 'image/webp'],
