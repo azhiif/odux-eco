@@ -36,6 +36,16 @@ if (!getApps().length) {
   }
 }
 
-const db = getApps().length ? getFirestore() : null
+let db: Firestore | null = null
+let auth = null
+try {
+  if (getApps().length) {
+    db = getFirestore()
+    auth = getAuth()
+  }
+} catch (e) {
+  console.error("Failed to get Firestore or Auth instance:", e)
+}
+
 export const adminDb = db as Firestore
-export const adminAuth = getApps().length ? getAuth() : null
+export const adminAuth = auth
