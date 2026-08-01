@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 export async function POST(req: Request) {
   try {
     const Razorpay = (await import('razorpay')).default
-    const { adminDb } = await import('@/lib/firebase-admin')
+    const { adminDb, firebaseAdminError } = await import('@/lib/firebase-admin')
 
     const body = await req.json()
     const { amount, receipt, notes } = body
@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     }
 
     if (!adminDb) {
-      throw new Error('Firebase Admin is not initialized.')
+      throw new Error(`Firebase Admin is not initialized. Reason: ${firebaseAdminError || 'Unknown'}`)
     }
 
     const secretsDoc = await adminDb.collection('settings').doc('secrets').get()
