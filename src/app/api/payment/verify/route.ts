@@ -2,20 +2,8 @@ import { NextResponse } from 'next/server'
 import crypto from 'crypto'
 export async function POST(req: Request) {
   try {
-    const { adminDb, adminAuth } = await import('@/lib/firebase-admin')
-    const authHeader = req.headers.get('Authorization')
-    const token = authHeader?.split('Bearer ')[1]
+    const { adminDb } = await import('@/lib/firebase-admin')
     
-    let uid: string | null = null
-    if (token && adminAuth) {
-      try {
-        const decodedToken = await adminAuth.verifyIdToken(token)
-        uid = decodedToken.uid
-      } catch (e) {
-        console.error('Invalid auth token:', e)
-      }
-    }
-
     const body = await req.json()
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, firebase_order_id, isFailure } = body
 
@@ -36,13 +24,6 @@ export async function POST(req: Request) {
     }
 
     const orderData = orderSnap.data()!
-
-    // 2. Validate Ownership
-    // Only the owner or guest can verify the order
-    if (orderData.user_id !== 'guest' && orderData.user_id !== uid) {
-      console.warn(`Unauthorized verification attempt for order ${firebase_order_id} by uid ${uid}`)
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
-    }
 
     // 3. Idempotency Check
     if (orderData.payment_status === 'paid') {

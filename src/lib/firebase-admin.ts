@@ -1,6 +1,5 @@
 import { initializeApp, getApps, cert } from 'firebase-admin/app'
 import { getFirestore, Firestore } from 'firebase-admin/firestore'
-import { getAuth } from 'firebase-admin/auth'
 
 if (!getApps().length) {
   try {
@@ -11,7 +10,6 @@ if (!getApps().length) {
     
     let credential;
     try {
-      // Sometimes Next.js or shell strips the outer curly braces
       let keyToParse = serviceAccountKey.trim();
       if (keyToParse.startsWith('"type"')) {
         keyToParse = '{' + keyToParse + '}';
@@ -37,15 +35,12 @@ if (!getApps().length) {
 }
 
 let db: Firestore | null = null
-let auth = null
 try {
   if (getApps().length) {
     db = getFirestore()
-    auth = getAuth()
   }
 } catch (e) {
-  console.error("Failed to get Firestore or Auth instance:", e)
+  console.error("Failed to get Firestore instance:", e)
 }
 
 export const adminDb = db as Firestore
-export const adminAuth = auth
