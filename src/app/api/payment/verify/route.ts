@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server'
 import crypto from 'crypto'
-import { adminDb, adminAuth } from '@/lib/firebase-admin'
-
 export async function POST(req: Request) {
   try {
+    const { adminDb, adminAuth } = await import('@/lib/firebase-admin')
     const authHeader = req.headers.get('Authorization')
     const token = authHeader?.split('Bearer ')[1]
     

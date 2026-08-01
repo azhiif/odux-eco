@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server'
-import Razorpay from 'razorpay'
-import { adminDb } from '@/lib/firebase-admin'
-
 export async function POST(req: Request) {
   try {
+    const Razorpay = (await import('razorpay')).default
+    const { adminDb } = await import('@/lib/firebase-admin')
+
     const body = await req.json()
     const { amount, receipt, notes } = body
 
