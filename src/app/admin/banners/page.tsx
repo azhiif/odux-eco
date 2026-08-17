@@ -5,27 +5,32 @@ import Link from 'next/link'
 import { storage } from '@/lib/firebase'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { getBanners, createBanner, updateBanner, deleteBanner } from '@/lib/banner'
+import { getProducts, Product } from '@/lib/products'
+import { getCategories, Category } from '@/lib/categories'
 import { Image as ImageIcon, Plus, Edit, Trash2, Camera, Upload, Eye, EyeOff, X, Loader2, PlaySquare, ChevronUp, ChevronDown } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Modal } from '@/components/ui/modal'
 
 interface Banner {
   id: string
-  title: string
-  subtitle: string
+  title?: string
+  subtitle?: string
   desktop_image_url: string
   mobile_image_url: string
-  button_text: string
-  button_link: string
+  button_text?: string
+  button_link?: string
   is_active: boolean
   sort_order: number
 }
 
 export default function BannersPage() {
   const [banners, setBanners] = useState<Banner[]>([])
+  const [products, setProducts] = useState<Product[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState<{desktop: boolean, mobile: boolean}>({desktop: false, mobile: false})
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null)
+  const [linkType, setLinkType] = useState<'custom' | 'product' | 'category'>('custom')
   const [modalState, setModalState] = useState<{isOpen: boolean, title: string, message: string, type: 'error'|'success'|'info'}>({
     isOpen: false, title: '', message: '', type: 'info'
   })
@@ -46,7 +51,18 @@ export default function BannersPage() {
 
   useEffect(() => {
     fetchBanners()
+    fetchOptions()
   }, [])
+
+  const fetchOptions = async () => {
+    try {
+      const [prods, cats] = await Promise.all([getProducts(), getCategories()])
+      setProducts(prods)
+      setCategories(cats)
+    } catch (error) {
+      console.error('Error fetching options:', error)
+    }
+  }
 
   const fetchBanners = async () => {
     try {
@@ -170,12 +186,13 @@ export default function BannersPage() {
       sort_order: 0
     })
     setEditingBanner(null)
+    setLinkType('custom')
   }
 
   const handleEdit = (banner: Banner) => {
     setEditingBanner(banner)
     setFormData({
-      title: banner.title,
+      title: banner.title || '',
       subtitle: banner.subtitle || '',
       desktop_image_url: banner.desktop_image_url,
       mobile_image_url: banner.mobile_image_url,
@@ -184,6 +201,14 @@ export default function BannersPage() {
       is_active: banner.is_active,
       sort_order: banner.sort_order
     })
+    
+    if (banner.button_link?.startsWith('/products/')) {
+      setLinkType('product')
+    } else if (banner.button_link?.startsWith('/categories/')) {
+      setLinkType('category')
+    } else {
+      setLinkType('custom')
+    }
   }
 
   const handleDelete = async (id: string) => {
@@ -244,13 +269,12 @@ export default function BannersPage() {
             <h2 className="text-heading-3 text-gray-900 mb-6">{editingBanner ? 'Edit Banner' : 'Add New Banner'}</h2>
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Title *</label>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Title</label>
                 <input
-                  required
                   value={formData.title}
                   onChange={(e) => setFormData({...formData, title: e.target.value})}
                   className="form-input"
-                  placeholder="Banner title"
+                  placeholder="Banner title (Optional)"
                 />
               </div>
 
@@ -315,26 +339,75 @@ export default function BannersPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">Button Text</label>
                   <input
                     value={formData.button_text}
                     onChange={(e) => setFormData({...formData, button_text: e.target.value})}
                     className="form-input"
-                    placeholder="Shop Now"
+                    placeholder="Shop Now (Optional)"
                   />
                 </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Link Target</label>
+                  <select
+                    value={linkType}
+                    onChange={(e) => {
+                      const val = e.target.value as 'custom'|'product'|'category'
+                      setLinkType(val)
+                      if (val === 'custom') setFormData({...formData, button_link: ''})
+                    }}
+                    className="form-input"
+                  >
+                    <option value="custom">Custom URL</option>
+                    <option value="product">Product Page</option>
+                    <option value="category">Category Page</option>
+                  </select>
+                </div>
+              </div>
+
+              {linkType === 'product' && (
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Select Product *</label>
+                  <select
+                    required
+                    value={formData.button_link?.replace('/products/', '') || ''}
+                    onChange={(e) => setFormData({...formData, button_link: `/products/${e.target.value}`})}
+                    className="form-input"
+                  >
+                    <option value="">-- Select Product --</option>
+                    {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                  </select>
+                </div>
+              )}
+              
+              {linkType === 'category' && (
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Select Category *</label>
+                  <select
+                    required
+                    value={formData.button_link?.replace('/categories/', '') || ''}
+                    onChange={(e) => setFormData({...formData, button_link: `/categories/${e.target.value}`})}
+                    className="form-input"
+                  >
+                    <option value="">-- Select Category --</option>
+                    {categories.map(c => <option key={c.id} value={c.slug}>{c.name}</option>)}
+                  </select>
+                </div>
+              )}
+
+              {linkType === 'custom' && (
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">Button Link</label>
                   <input
                     value={formData.button_link}
                     onChange={(e) => setFormData({...formData, button_link: e.target.value})}
                     className="form-input"
-                    placeholder="/products"
+                    placeholder="/about"
                   />
                 </div>
-              </div>
+              )}
 
               <div className="flex gap-4">
                 <div className="flex-1">
@@ -408,7 +481,7 @@ export default function BannersPage() {
                     <div>
                       <div className="flex justify-between items-start mb-2">
                         <div>
-                          <h3 className="text-2xl font-heading font-bold text-gray-900 mb-1">{banner.title}</h3>
+                          <h3 className="text-2xl font-heading font-bold text-gray-900 mb-1">{banner.title || 'Untitled Banner'}</h3>
                           {banner.subtitle && <p className="text-gray-500 font-medium">{banner.subtitle}</p>}
                         </div>
                         <span className={`px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-full border ${banner.is_active ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-100 text-gray-700 border-gray-200'}`}>

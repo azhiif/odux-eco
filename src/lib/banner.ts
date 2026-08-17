@@ -3,12 +3,12 @@ import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase
 
 export interface Banner {
   id: string
-  title: string
-  subtitle: string
+  title?: string
+  subtitle?: string
   desktop_image_url: string
   mobile_image_url: string
-  button_text: string
-  button_link: string
+  button_text?: string
+  button_link?: string
   is_active: boolean
   sort_order: number
 }

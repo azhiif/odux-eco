@@ -102,7 +102,7 @@ export default function HomeClient({ categories, featuredProducts, banners, cate
                     {/* Mobile Image */}
                     <Image
                       src={banners[currentSlide].mobile_image_url || banners[currentSlide].desktop_image_url}
-                      alt={banners[currentSlide].title}
+                      alt={banners[currentSlide].title || 'Banner'}
                       fill
                       priority
                       sizes="(max-width: 1600px) 92vw, 1472px"
@@ -111,41 +111,47 @@ export default function HomeClient({ categories, featuredProducts, banners, cate
                     {/* Desktop Image */}
                     <Image
                       src={banners[currentSlide].desktop_image_url || banners[currentSlide].mobile_image_url}
-                      alt={banners[currentSlide].title}
+                      alt={banners[currentSlide].title || 'Banner'}
                       fill
                       priority
                       sizes="(max-width: 1600px) 92vw, 1472px"
                       className="hidden md:block object-cover"
                     />
                     
-                    {/* Gradient Overlay for Text Readability */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent flex flex-col justify-end p-6 pb-16 md:p-16">
-                      <motion.h2 
-                        initial={{ y: 20, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        transition={{ delay: 0.3 }}
-                        className="text-white text-3xl md:text-heading-1 mb-2 drop-shadow-lg"
-                        style={{ textShadow: '0 4px 20px rgba(0,0,0,0.5)' }}
-                      >
-                        {banners[currentSlide].title}
-                      </motion.h2>
-                      {banners[currentSlide].subtitle && (
-                        <motion.p 
-                          initial={{ y: 20, opacity: 0 }}
-                          animate={{ y: 0, opacity: 1 }}
-                          transition={{ delay: 0.4 }}
-                          className="hidden md:block text-white/90 text-sm md:text-body-large mb-4 md:mb-6 max-w-2xl drop-shadow-md line-clamp-2 md:line-clamp-none"
-                          style={{ textShadow: '0 2px 10px rgba(0,0,0,0.4)' }}
-                        >
-                          {banners[currentSlide].subtitle}
-                        </motion.p>
-                      )}
-                      <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.5 }}>
-                        <div className="inline-flex items-center justify-center btn-premium-gold shadow-xl shadow-brand-pink/30 hover:scale-105 active:scale-95 transition-all text-sm md:text-lg px-6 py-3 md:px-8 md:py-4 rounded-full border-2 border-white/20 backdrop-blur-sm">
-                          {banners[currentSlide].button_text || 'Shop Now'} <ArrowRight className="ml-2 w-4 h-4 md:w-5 md:h-5" />
-                        </div>
-                      </motion.div>
-                    </div>
+                    {/* Gradient Overlay for Text Readability - Only render if text exists */}
+                    {(banners[currentSlide].title || banners[currentSlide].subtitle || banners[currentSlide].button_text) && (
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent flex flex-col justify-end p-6 pb-16 md:p-16">
+                        {banners[currentSlide].title && (
+                          <motion.h2 
+                            initial={{ y: 20, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            transition={{ delay: 0.3 }}
+                            className="text-white text-3xl md:text-heading-1 mb-2 drop-shadow-lg"
+                            style={{ textShadow: '0 4px 20px rgba(0,0,0,0.5)' }}
+                          >
+                            {banners[currentSlide].title}
+                          </motion.h2>
+                        )}
+                        {banners[currentSlide].subtitle && (
+                          <motion.p 
+                            initial={{ y: 20, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            transition={{ delay: 0.4 }}
+                            className="hidden md:block text-white/90 text-sm md:text-body-large mb-4 md:mb-6 max-w-2xl drop-shadow-md line-clamp-2 md:line-clamp-none"
+                            style={{ textShadow: '0 2px 10px rgba(0,0,0,0.4)' }}
+                          >
+                            {banners[currentSlide].subtitle}
+                          </motion.p>
+                        )}
+                        {(banners[currentSlide].button_text || banners[currentSlide].title || banners[currentSlide].subtitle) && (
+                          <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.5 }}>
+                            <div className="inline-flex items-center justify-center btn-premium-gold shadow-xl shadow-brand-pink/30 hover:scale-105 active:scale-95 transition-all text-sm md:text-lg px-6 py-3 md:px-8 md:py-4 rounded-full border-2 border-white/20 backdrop-blur-sm">
+                              {banners[currentSlide].button_text || 'Shop Now'} <ArrowRight className="ml-2 w-4 h-4 md:w-5 md:h-5" />
+                            </div>
+                          </motion.div>
+                        )}
+                      </div>
+                    )}
                   </Link>
                 </motion.div>
               </AnimatePresence>
